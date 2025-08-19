@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {
+  /* eslint-disable react-hooks/exhaustive-deps */ useState,
+  useEffect,
+  useRef,
+} from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { typography } from '../styles/theme';
@@ -10,12 +14,7 @@ interface TimerProps {
   onTick?: (remainingTime: number) => void;
 }
 
-export const Timer: React.FC<TimerProps> = ({ 
-  duration, 
-  onTimeUp, 
-  isPaused,
-  onTick 
-}) => {
+export const Timer: React.FC<TimerProps> = ({ duration, onTimeUp, isPaused, onTick }) => {
   const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState(duration);
   const animatedValue = useRef(new Animated.Value(1)).current;
@@ -36,9 +35,9 @@ export const Timer: React.FC<TimerProps> = ({
   useEffect(() => {
     if (!isPaused && timeLeft > 0) {
       intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
+        setTimeLeft(prev => {
           const newTime = prev - 1;
-          
+
           if (newTime <= 0) {
             onTimeUp();
             return 0;
@@ -75,8 +74,12 @@ export const Timer: React.FC<TimerProps> = ({
 
   const getTimerColor = () => {
     const percentage = (timeLeft / duration) * 100;
-    if (percentage > 50) return colors.success;
-    if (percentage > 25) return '#F59E0B';
+    if (percentage > 50) {
+      return colors.success;
+    }
+    if (percentage > 25) {
+      return '#F59E0B';
+    }
     return colors.error;
   };
 
@@ -87,9 +90,7 @@ export const Timer: React.FC<TimerProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.timeText, { color: getTimerColor() }]}>
-        {formatTime(timeLeft)}
-      </Text>
+      <Text style={[styles.timeText, { color: getTimerColor() }]}>{formatTime(timeLeft)}</Text>
       <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
         <Animated.View
           style={[

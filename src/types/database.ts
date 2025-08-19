@@ -2,13 +2,7 @@
 // TYPES TYPESCRIPT POUR LA BASE DE DONNÉES
 // ============================================
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface Database {
   public: {
@@ -551,13 +545,13 @@ export interface Database {
 }
 
 // Types utilitaires
-export type Tables<T extends keyof Database['public']['Tables']> = 
+export type Tables<T extends keyof Database['public']['Tables']> =
   Database['public']['Tables'][T]['Row'];
 
-export type InsertTables<T extends keyof Database['public']['Tables']> = 
+export type InsertTables<T extends keyof Database['public']['Tables']> =
   Database['public']['Tables'][T]['Insert'];
 
-export type UpdateTables<T extends keyof Database['public']['Tables']> = 
+export type UpdateTables<T extends keyof Database['public']['Tables']> =
   Database['public']['Tables'][T]['Update'];
 
 // Types spécifiques pour l'application

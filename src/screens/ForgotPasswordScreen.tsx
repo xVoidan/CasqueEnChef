@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
@@ -17,8 +17,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { spacing, typography, borderRadius } from '../styles/theme';
 import { AuthStackScreenProps } from '../types/navigation';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../constants/styleConstants';
 
-export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword'>> = ({ navigation }) => {
+export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword'>> = ({
+  navigation,
+}) => {
   const { colors } = useTheme();
   const { resetPassword, loading } = useAuth();
   const [email, setEmail] = useState('');
@@ -34,30 +37,27 @@ export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword
       await resetPassword(email);
       setEmailSent(true);
       Alert.alert(
-        'Email envoyé', 
+        'Email envoyé',
         'Un email de réinitialisation vous a été envoyé. Veuillez vérifier votre boîte mail.',
         [{ text: 'OK', onPress: () => navigation.navigate('SignIn') }]
       );
-    } catch (err: any) {
-      Alert.alert('Erreur', err.message);
+    } catch (err) {
+      Alert.alert('Erreur', err instanceof Error ? err.message : 'Une erreur est survenue');
     }
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
 
@@ -65,21 +65,23 @@ export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword
             <View style={[styles.iconContainer, { backgroundColor: `${colors.primary}15` }]}>
               <Ionicons name="lock-open-outline" size={48} color={colors.primary} />
             </View>
-            <Text style={[styles.title, { color: colors.text }]}>
-              Mot de passe oublié ?
-            </Text>
+            <Text style={[styles.title, { color: colors.text }]}>Mot de passe oublié ?</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Pas de panique ! Entrez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+              Pas de panique ! Entrez votre email et nous vous enverrons un lien pour réinitialiser
+              votre mot de passe.
             </Text>
           </View>
 
           {!emailSent ? (
             <View style={styles.formContainer}>
               <View style={styles.inputContainer}>
-                <Text style={[styles.label, { color: colors.text }]}>
-                  Adresse email
-                </Text>
-                <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Text style={[styles.label, { color: colors.text }]}>Adresse email</Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
                   <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
                   <TextInput
                     style={[styles.input, { color: colors.text }]}
@@ -94,18 +96,20 @@ export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword
                 </View>
               </View>
 
-              <TouchableOpacity 
-                style={[styles.resetButton, { backgroundColor: colors.primary, opacity: loading ? 0.7 : 1 }]}
+              <TouchableOpacity
+                style={[
+                  styles.resetButton,
+                  { backgroundColor: colors.primary },
+                  loading ? styles.buttonDisabled : null,
+                ]}
                 activeOpacity={0.8}
-                onPress={handleResetPassword}
+                onPress={() => void handleResetPassword()}
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={COLORS.white} />
                 ) : (
-                  <Text style={styles.resetButtonText}>
-                    Envoyer le lien de réinitialisation
-                  </Text>
+                  <Text style={styles.resetButtonText}>Envoyer le lien de réinitialisation</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -114,20 +118,17 @@ export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword
               <View style={[styles.successIcon, { backgroundColor: `${colors.success}15` }]}>
                 <Ionicons name="checkmark-circle" size={64} color={colors.success} />
               </View>
-              <Text style={[styles.successTitle, { color: colors.text }]}>
-                Email envoyé !
-              </Text>
+              <Text style={[styles.successTitle, { color: colors.text }]}>Email envoyé !</Text>
               <Text style={[styles.successText, { color: colors.textSecondary }]}>
-                Vérifiez votre boîte mail et suivez les instructions pour réinitialiser votre mot de passe.
+                Vérifiez votre boîte mail et suivez les instructions pour réinitialiser votre mot de
+                passe.
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.backToLoginButton, { backgroundColor: colors.primary }]}
                 activeOpacity={0.8}
                 onPress={() => navigation.navigate('SignIn')}
               >
-                <Text style={styles.backToLoginButtonText}>
-                  Retour à la connexion
-                </Text>
+                <Text style={styles.backToLoginButtonText}>Retour à la connexion</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -136,13 +137,8 @@ export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword
             <Text style={[styles.footerText, { color: colors.textSecondary }]}>
               Vous vous souvenez de votre mot de passe ?
             </Text>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('SignIn')}
-              disabled={loading}
-            >
-              <Text style={[styles.signInLink, { color: colors.primary }]}>
-                Se connecter
-              </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignIn')} disabled={loading}>
+              <Text style={[styles.signInLink, { color: colors.primary }]}>Se connecter</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -221,7 +217,7 @@ const styles = StyleSheet.create({
   },
   resetButtonText: {
     ...typography.bodyBold,
-    color: '#FFFFFF',
+    color: COLORS.white,
   },
   successContainer: {
     flex: 1,
@@ -254,7 +250,7 @@ const styles = StyleSheet.create({
   },
   backToLoginButtonText: {
     ...typography.bodyBold,
-    color: '#FFFFFF',
+    color: COLORS.white,
   },
   footer: {
     flexDirection: 'row',
@@ -268,5 +264,8 @@ const styles = StyleSheet.create({
   },
   signInLink: {
     ...typography.bodyBold,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });

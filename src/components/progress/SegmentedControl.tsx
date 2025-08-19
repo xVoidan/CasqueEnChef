@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
+import React, { /* eslint-disable react-hooks/exhaustive-deps */ useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, LayoutChangeEvent } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useTheme } from '../../contexts/ThemeContext';
+import { COLORS } from '../../constants/styleConstants';
 
 interface SegmentedControlProps {
   segments: string[];
@@ -45,24 +42,19 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
 
   return (
     <View style={styles.wrapper}>
-      <View 
+      <View
         onLayout={handleLayout}
-        style={[
-          styles.container, 
-          { 
-            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-          }
-        ]}>
-        <Animated.View 
+        style={[styles.container, isDark ? styles.containerDark : styles.containerLight]}
+      >
+        <Animated.View
           style={[
             styles.slider,
             sliderStyle,
-            { 
+            {
               backgroundColor: colors.primary,
               shadowColor: colors.primary,
-            }
-          ]} 
+            },
+          ]}
         />
         {segments.map((segment, index) => (
           <TouchableOpacity
@@ -74,12 +66,11 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
             <Text
               style={[
                 styles.segmentText,
-                {
-                  color: selectedIndex === index 
-                    ? '#FFFFFF' 
-                    : isDark ? colors.text : colors.textSecondary,
-                  fontWeight: selectedIndex === index ? '600' : '400',
-                },
+                selectedIndex === index
+                  ? styles.segmentTextSelected
+                  : isDark
+                    ? { color: colors.text }
+                    : { color: colors.textSecondary },
               ]}
             >
               {segment}
@@ -127,5 +118,18 @@ const styles = StyleSheet.create({
   segmentText: {
     fontSize: 13,
     letterSpacing: 0.3,
+    fontWeight: '400',
+  },
+  segmentTextSelected: {
+    color: COLORS.white,
+    fontWeight: '600',
+  },
+  containerDark: {
+    backgroundColor: COLORS.backgroundDarkSubtle,
+    borderColor: COLORS.borderDarkSubtle,
+  },
+  containerLight: {
+    backgroundColor: COLORS.backgroundLightSubtle,
+    borderColor: COLORS.borderLightSubtle,
   },
 });

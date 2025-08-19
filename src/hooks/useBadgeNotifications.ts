@@ -18,27 +18,31 @@ export const useBadgeNotifications = () => {
 
   // Vérifier les nouveaux badges après chaque session
   const checkForNewBadges = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
 
     try {
       const result = await badgesService.checkAndAwardBadges(user.id);
-      
+
       if (result.new_badges && result.new_badges.length > 0) {
         // Récupérer les détails des nouveaux badges
         const allBadges = await badgesService.getUserBadges(user.id);
-        const newBadgeDetails = result.new_badges.map(badgeName => {
-          const badge = allBadges.find(b => b.nom === badgeName);
-          if (badge) {
-            return {
-              nom: badge.nom,
-              description: badge.description,
-              icone: badge.icone,
-              couleur: badge.couleur,
-              points: badge.points_requis,
-            };
-          }
-          return null;
-        }).filter(Boolean) as BadgeNotification[];
+        const newBadgeDetails = result.new_badges
+          .map(badgeName => {
+            const badge = allBadges.find(b => b.nom === badgeName);
+            if (badge) {
+              return {
+                nom: badge.nom,
+                description: badge.description,
+                icone: badge.icone,
+                couleur: badge.couleur,
+                points: badge.points_requis,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as BadgeNotification[];
 
         // Ajouter à la queue
         setQueue(prev => [...prev, ...newBadgeDetails]);

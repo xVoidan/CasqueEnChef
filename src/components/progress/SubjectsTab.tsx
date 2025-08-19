@@ -1,5 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, {
+  /* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-explicit-any */ useEffect,
+  useState,
+} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -25,12 +35,12 @@ interface SubjectsTabProps {
 export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
   const { colors } = useTheme();
   const [subjects, setSubjects] = useState<SubjectData[]>([]);
-  const [selectedSubject, setSelectedSubject] = useState<SubjectData | null>(null);
+  const [_selectedSubject, setSelectedSubject] = useState<SubjectData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchThemeStats();
-  }, [userId]);
+    void fetchThemeStats();
+  }, [userId]); // fetchStats is intentionally omitted
 
   const fetchThemeStats = async () => {
     if (!userId) {
@@ -40,7 +50,7 @@ export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
 
     try {
       const stats = await progressService.getUserStatsByTheme(userId);
-      
+
       const formattedSubjects = stats.map((stat: ThemeStats) => ({
         id: stat.theme_id,
         name: stat.theme_nom,
@@ -93,9 +103,15 @@ export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
   };
 
   const getPerformanceLevel = (rate: number) => {
-    if (rate >= 90) return { text: 'Excellent', color: '#10B981' };
-    if (rate >= 75) return { text: 'Bon', color: '#3B82F6' };
-    if (rate >= 60) return { text: 'Moyen', color: '#F59E0B' };
+    if (rate >= 90) {
+      return { text: 'Excellent', color: '#10B981' };
+    }
+    if (rate >= 75) {
+      return { text: 'Bon', color: '#3B82F6' };
+    }
+    if (rate >= 60) {
+      return { text: 'Moyen', color: '#F59E0B' };
+    }
     return { text: 'À améliorer', color: '#EF4444' };
   };
 
@@ -111,8 +127,8 @@ export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
   }
 
   return (
-    <ScrollView 
-      style={styles.container} 
+    <ScrollView
+      style={styles.container}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
@@ -130,9 +146,10 @@ export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
           </View>
           <View style={styles.summaryStatItem}>
             <Text style={[styles.summaryStatValue, { color: colors.primary }]}>
-              {subjects.length > 0 ? Math.round(
-                subjects.reduce((acc, s) => acc + s.successRate, 0) / subjects.length
-              ) : 0}%
+              {subjects.length > 0
+                ? Math.round(subjects.reduce((acc, s) => acc + s.successRate, 0) / subjects.length)
+                : 0}
+              %
             </Text>
             <Text style={[styles.summaryStatLabel, { color: colors.textSecondary }]}>
               Taux moyen
@@ -142,9 +159,7 @@ export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
             <Text style={[styles.summaryStatValue, { color: colors.primary }]}>
               {subjects.length}
             </Text>
-            <Text style={[styles.summaryStatLabel, { color: colors.textSecondary }]}>
-              Matières
-            </Text>
+            <Text style={[styles.summaryStatLabel, { color: colors.textSecondary }]}>Matières</Text>
           </View>
         </View>
       </View>
@@ -163,64 +178,61 @@ export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
       ) : (
         <View style={styles.subjectsGrid}>
           {subjects.map((subject, index) => {
-          const performance = getPerformanceLevel(subject.successRate);
-          return (
-            <Animated.View
-              key={subject.id}
-              entering={FadeInDown.delay(index * 100)}
-              style={styles.subjectWrapper}
-            >
-              <View style={[styles.subjectCard, { backgroundColor: colors.surface }, shadows.sm]}>
-              <TouchableOpacity
-                onPress={() => setSelectedSubject(subject)}
-                activeOpacity={0.7}
+            const performance = getPerformanceLevel(subject.successRate);
+            return (
+              <Animated.View
+                key={subject.id}
+                entering={FadeInDown.delay(index * 100)}
+                style={styles.subjectWrapper}
               >
-                <View style={styles.subjectHeader}>
-                  <View style={[styles.iconCircle, { backgroundColor: subject.color + '20' }]}>
-                    <Ionicons name={subject.icon as any} size={24} color={subject.color} />
-                  </View>
-                  <View style={styles.progressContainer}>
-                    <CircularProgress percentage={subject.successRate} color={subject.color} />
-                    <Text style={[styles.percentageText, { color: colors.text }]}>
-                      {subject.successRate}%
-                    </Text>
-                  </View>
-                </View>
+                <View style={[styles.subjectCard, { backgroundColor: colors.surface }, shadows.sm]}>
+                  <TouchableOpacity onPress={() => setSelectedSubject(subject)} activeOpacity={0.7}>
+                    <View style={styles.subjectHeader}>
+                      <View style={[styles.iconCircle, { backgroundColor: subject.color + '20' }]}>
+                        <Ionicons name={subject.icon as any} size={24} color={subject.color} />
+                      </View>
+                      <View style={styles.progressContainer}>
+                        <CircularProgress percentage={subject.successRate} color={subject.color} />
+                        <Text style={[styles.percentageText, { color: colors.text }]}>
+                          {subject.successRate}%
+                        </Text>
+                      </View>
+                    </View>
 
-                <Text style={[styles.subjectName, { color: colors.text }]} numberOfLines={1}>
-                  {subject.name}
-                </Text>
-
-                <View style={styles.subjectStats}>
-                  <View style={styles.statRow}>
-                    <Ionicons name="checkmark-circle" size={16} color={colors.textSecondary} />
-                    <Text style={[styles.statText, { color: colors.textSecondary }]}>
-                      {subject.correctAnswers}/{subject.totalQuestions} réussies
+                    <Text style={[styles.subjectName, { color: colors.text }]} numberOfLines={1}>
+                      {subject.name}
                     </Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Ionicons name="time" size={16} color={colors.textSecondary} />
-                    <Text style={[styles.statText, { color: colors.textSecondary }]}>
-                      {subject.lastPracticed}
-                    </Text>
-                  </View>
-                </View>
 
-                <View
-                  style={[
-                    styles.performanceBadge,
-                    { backgroundColor: performance.color + '20' },
-                  ]}
-                >
-                  <Text style={[styles.performanceText, { color: performance.color }]}>
-                    {performance.text}
-                  </Text>
+                    <View style={styles.subjectStats}>
+                      <View style={styles.statRow}>
+                        <Ionicons name="checkmark-circle" size={16} color={colors.textSecondary} />
+                        <Text style={[styles.statText, { color: colors.textSecondary }]}>
+                          {subject.correctAnswers}/{subject.totalQuestions} réussies
+                        </Text>
+                      </View>
+                      <View style={styles.statRow}>
+                        <Ionicons name="time" size={16} color={colors.textSecondary} />
+                        <Text style={[styles.statText, { color: colors.textSecondary }]}>
+                          {subject.lastPracticed}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.performanceBadge,
+                        { backgroundColor: performance.color + '20' },
+                      ]}
+                    >
+                      <Text style={[styles.performanceText, { color: performance.color }]}>
+                        {performance.text}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-              </View>
-            </Animated.View>
-          );
-        })}
+              </Animated.View>
+            );
+          })}
         </View>
       )}
 
@@ -229,9 +241,7 @@ export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
         <View style={[styles.recommendationCard, { backgroundColor: colors.surface }, shadows.sm]}>
           <View style={styles.recommendationHeader}>
             <Ionicons name="bulb" size={24} color={colors.warning} />
-            <Text style={[styles.recommendationTitle, { color: colors.text }]}>
-              Recommandation
-            </Text>
+            <Text style={[styles.recommendationTitle, { color: colors.text }]}>Recommandation</Text>
           </View>
           <Text style={[styles.recommendationText, { color: colors.textSecondary }]}>
             {subjects.filter(s => s.successRate < 70).length > 0 ? (
@@ -242,7 +252,7 @@ export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
                   .slice(0, 2)
                   .map((s, i, arr) => (
                     <Text key={s.id}>
-                      <Text style={{ fontWeight: 'bold' }}>{s.name}</Text>
+                      <Text style={styles.boldText}>{s.name}</Text>
                       {i < arr.length - 1 ? ' et ' : ''}
                     </Text>
                   ))}{' '}
@@ -254,9 +264,9 @@ export const SubjectsTab: React.FC<SubjectsTabProps> = ({ userId }) => {
           </Text>
         </View>
       )}
-      
+
       {/* Espace pour la tabbar */}
-      <View style={{ height: 100 }} />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 };
@@ -400,5 +410,11 @@ const styles = StyleSheet.create({
   emptyStateSubtext: {
     fontSize: 14,
     textAlign: 'center',
+  },
+  boldText: {
+    fontWeight: 'bold',
+  },
+  bottomSpacer: {
+    height: 100,
   },
 });

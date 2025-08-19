@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing, no-console */
 import { supabase } from '../config/supabase';
 
 export interface Badge {
@@ -35,7 +36,7 @@ export interface Rang {
   rang_suivant: string;
   points_requis_suivant: number;
   progression_rang: number;
-  avantages: any;
+  avantages: string[];
 }
 
 export interface NotificationRecompense {
@@ -60,7 +61,9 @@ class BadgesService {
         .order('categorie', { ascending: true })
         .order('niveau', { ascending: true });
 
-      if (badgesError) throw badgesError;
+      if (badgesError) {
+        throw badgesError;
+      }
 
       // Récupérer les badges gagnés par l'utilisateur
       const { data: earnedBadges, error: earnedError } = await supabase
@@ -68,17 +71,17 @@ class BadgesService {
         .select('badge_id, date_obtention')
         .eq('profile_id', userId);
 
-      if (earnedError) throw earnedError;
+      if (earnedError) {
+        throw earnedError;
+      }
 
       // Mapper les badges avec leur statut
-      const earnedMap = new Map(
-        earnedBadges?.map(eb => [eb.badge_id, eb.date_obtention]) || []
-      );
+      const earnedMap = new Map(earnedBadges?.map(eb => [eb.badge_id, eb.date_obtention]) || []);
 
       return (badges || []).map(badge => ({
         ...badge,
         earned: earnedMap.has(badge.id),
-        date_obtention: earnedMap.get(badge.id)
+        date_obtention: earnedMap.get(badge.id),
       }));
     } catch (error) {
       console.error('Error fetching user badges:', error);
@@ -89,10 +92,11 @@ class BadgesService {
   // Récupérer les défis actifs pour un utilisateur
   async getUserChallenges(userId: string): Promise<Defi[]> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_user_challenges', { p_user_id: userId });
+      const { data, error } = await supabase.rpc('get_user_challenges', { p_user_id: userId });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       return data || [];
     } catch (error) {
       console.error('Error fetching user challenges:', error);
@@ -103,10 +107,11 @@ class BadgesService {
   // Récupérer le rang actuel de l'utilisateur
   async getUserRank(userId: string): Promise<Rang | null> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_user_rank', { p_user_id: userId });
+      const { data, error } = await supabase.rpc('get_user_rank', { p_user_id: userId });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       return data?.[0] || null;
     } catch (error) {
       console.error('Error fetching user rank:', error);
@@ -115,44 +120,43 @@ class BadgesService {
   }
 
   // Vérifier et attribuer les badges automatiquement
-  async checkAndAwardBadges(userId: string): Promise<{ new_badges: string[], total_points_earned: number }> {
+  async checkAndAwardBadges(
+    userId: string
+  ): Promise<{ new_badges: string[]; total_points_earned: number }> {
     try {
       // Récupérer d'abord les badges existants avant la vérification
       const badgesBefore = await this.getUserBadges(userId);
-      const earnedBadgeIdsBefore = new Set(
-        badgesBefore.filter(b => b.earned).map(b => b.id)
-      );
-      
-      const { data, error } = await supabase
-        .rpc('check_and_award_badges', { p_user_id: userId });
+      const earnedBadgeIdsBefore = new Set(badgesBefore.filter(b => b.earned).map(b => b.id));
+
+      const { data, error } = await supabase.rpc('check_and_award_badges', { p_user_id: userId });
 
       if (error) {
         console.error('Erreur lors de la vérification des badges:', error);
-        
+
         // Si c'est une erreur RLS, on essaye de récupérer au moins les badges gagnés
         if (error.code === '42501') {
           return { new_badges: [], total_points_earned: 0 };
         }
-        
+
         throw error;
       }
-      
+
       const result = data?.[0] || { new_badges: [], total_points_earned: 0 };
-      
+
       // Si pas de nouveaux badges selon la fonction SQL, vérifier manuellement
       // au cas où il y aurait un problème de détection
       if (result.new_badges.length === 0) {
         const badgesAfter = await this.getUserBadges(userId);
-        const newlyEarnedBadges = badgesAfter.filter(b => 
-          b.earned && !earnedBadgeIdsBefore.has(b.id)
+        const newlyEarnedBadges = badgesAfter.filter(
+          b => b.earned && !earnedBadgeIdsBefore.has(b.id)
         );
-        
+
         if (newlyEarnedBadges.length > 0) {
           console.log('Nouveaux badges détectés par comparaison:', newlyEarnedBadges);
           result.new_badges = newlyEarnedBadges.map(b => b.nom);
         }
       }
-      
+
       return result;
     } catch (error) {
       console.error('Error checking badges:', error);
@@ -161,19 +165,26 @@ class BadgesService {
   }
 
   // Mettre à jour la progression d'un défi
-  async updateChallengeProgress(userId: string, defiId: number, progression: number): Promise<boolean> {
+  async updateChallengeProgress(
+    userId: string,
+    defiId: number,
+    progression: number
+  ): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('defis_utilisateur')
-        .upsert({
+      const { error } = await supabase.from('defis_utilisateur').upsert(
+        {
           profile_id: userId,
           defi_id: defiId,
-          progression_actuelle: progression
-        }, {
-          onConflict: 'profile_id,defi_id'
-        });
+          progression_actuelle: progression,
+        },
+        {
+          onConflict: 'profile_id,defi_id',
+        }
+      );
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       // Vérifier si le défi est complété
       const { data: defi } = await supabase
@@ -201,7 +212,7 @@ class BadgesService {
         .from('defis_utilisateur')
         .update({
           date_complete: new Date().toISOString(),
-          points_gagnes: points
+          points_gagnes: points,
         })
         .eq('profile_id', userId)
         .eq('defi_id', defiId);
@@ -218,7 +229,7 @@ class BadgesService {
         await supabase
           .from('profiles')
           .update({
-            points_total: currentProfile.points_total + points
+            points_total: currentProfile.points_total + points,
           })
           .eq('id', userId);
       }
@@ -237,7 +248,7 @@ class BadgesService {
           message: `Vous avez complété le défi "${defi.nom}" et gagné ${points} points !`,
           icone: defi.icone,
           couleur: defi.couleur,
-          reference_id: defiId
+          reference_id: defiId,
         });
       }
     } catch (error) {
@@ -246,14 +257,15 @@ class BadgesService {
   }
 
   // Créer une notification de récompense
-  async createNotification(userId: string, notification: Omit<NotificationRecompense, 'id' | 'lu' | 'created_at'>): Promise<void> {
+  async createNotification(
+    userId: string,
+    notification: Omit<NotificationRecompense, 'id' | 'lu' | 'created_at'>
+  ): Promise<void> {
     try {
-      await supabase
-        .from('notifications_recompenses')
-        .insert({
-          profile_id: userId,
-          ...notification
-        });
+      await supabase.from('notifications_recompenses').insert({
+        profile_id: userId,
+        ...notification,
+      });
     } catch (error) {
       console.error('Error creating notification:', error);
     }
@@ -270,7 +282,9 @@ class BadgesService {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       return data || [];
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -302,7 +316,7 @@ class BadgesService {
       total: badges.length,
       earned: badges.filter(b => b.earned).length,
       byCategory: {} as { [key: string]: { total: number; earned: number } },
-      percentageComplete: 0
+      percentageComplete: 0,
     };
 
     // Grouper par catégorie
@@ -316,9 +330,7 @@ class BadgesService {
       }
     });
 
-    stats.percentageComplete = stats.total > 0 
-      ? Math.round((stats.earned / stats.total) * 100)
-      : 0;
+    stats.percentageComplete = stats.total > 0 ? Math.round((stats.earned / stats.total) * 100) : 0;
 
     return stats;
   }
@@ -326,11 +338,15 @@ class BadgesService {
   // Obtenir le prochain badge à débloquer
   getNextBadgeToUnlock(badges: Badge[]): Badge | null {
     const unearned = badges.filter(b => !b.earned);
-    if (unearned.length === 0) return null;
+    if (unearned.length === 0) {
+      return null;
+    }
 
     // Prioriser par niveau puis par catégorie
     return unearned.sort((a, b) => {
-      if (a.niveau !== b.niveau) return a.niveau - b.niveau;
+      if (a.niveau !== b.niveau) {
+        return a.niveau - b.niveau;
+      }
       if (a.categorie !== b.categorie) {
         const categoryOrder = ['progression', 'performance', 'social', 'special'];
         return categoryOrder.indexOf(a.categorie) - categoryOrder.indexOf(b.categorie);
@@ -341,25 +357,35 @@ class BadgesService {
 
   // Formatter le temps restant pour un défi
   formatTimeRemaining(interval: string): string {
-    if (!interval) return 'Expiré';
-    
+    if (!interval) {
+      return 'Expiré';
+    }
+
     // Le format PostgreSQL est comme "7 days", "1 day", etc.
     const match = interval.match(/(\d+)\s+(\w+)/);
-    if (!match) return interval;
-    
+    if (!match) {
+      return interval;
+    }
+
     const [, value, unit] = match;
     const num = parseInt(value);
-    
+
     if (unit.startsWith('day')) {
-      if (num === 0) return "Aujourd'hui";
-      if (num === 1) return "1 jour";
+      if (num === 0) {
+        return "Aujourd'hui";
+      }
+      if (num === 1) {
+        return '1 jour';
+      }
       return `${num} jours`;
     }
     if (unit.startsWith('hour')) {
-      if (num === 1) return "1 heure";
+      if (num === 1) {
+        return '1 heure';
+      }
       return `${num} heures`;
     }
-    
+
     return interval;
   }
 }

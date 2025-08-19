@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import React, {
+  /* eslint-disable @typescript-eslint/prefer-nullish-coalescing, react-native/no-color-literals */ useState,
+} from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { spacing, typography, borderRadius, shadows } from '../styles/theme';
@@ -42,9 +38,7 @@ export const ReviewQuestionsScreen: React.FC<TrainingStackScreenProps<'ReviewQue
         >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Questions à réviser
-        </Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Questions à réviser</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -52,8 +46,8 @@ export const ReviewQuestionsScreen: React.FC<TrainingStackScreenProps<'ReviewQue
         <View style={styles.infoCard}>
           <Ionicons name="information-circle" size={24} color={colors.primary} />
           <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            Voici les questions que vous avez manquées. Prenez le temps de comprendre
-            les explications pour progresser.
+            Voici les questions que vous avez manquées. Prenez le temps de comprendre les
+            explications pour progresser.
           </Text>
         </View>
 
@@ -65,11 +59,7 @@ export const ReviewQuestionsScreen: React.FC<TrainingStackScreenProps<'ReviewQue
             <TouchableOpacity
               onPress={() => toggleQuestion(question.questionId)}
               activeOpacity={0.7}
-              style={[
-                styles.questionCard,
-                { backgroundColor: colors.surface },
-                shadows.sm,
-              ]}
+              style={[styles.questionCard, { backgroundColor: colors.surface }, shadows.sm]}
             >
               <View style={styles.questionHeader}>
                 <View style={styles.questionMeta}>
@@ -83,21 +73,16 @@ export const ReviewQuestionsScreen: React.FC<TrainingStackScreenProps<'ReviewQue
                   </Text>
                 </View>
                 <Ionicons
-                  name={expandedQuestions.has(question.questionId) ? "chevron-up" : "chevron-down"}
+                  name={expandedQuestions.has(question.questionId) ? 'chevron-up' : 'chevron-down'}
                   size={20}
                   color={colors.textSecondary}
                 />
               </View>
 
-              <Text style={[styles.questionText, { color: colors.text }]}>
-                {question.enonce}
-              </Text>
+              <Text style={[styles.questionText, { color: colors.text }]}>{question.enonce}</Text>
 
               {expandedQuestions.has(question.questionId) && (
-                <Animated.View
-                  entering={FadeInDown.duration(300)}
-                  style={styles.answerSection}
-                >
+                <Animated.View entering={FadeInDown.duration(300)} style={styles.answerSection}>
                   <View style={styles.answerRow}>
                     <View style={[styles.answerBox, styles.wrongAnswer]}>
                       <Ionicons name="close-circle" size={20} color="#EF4444" />
@@ -132,8 +117,8 @@ export const ReviewQuestionsScreen: React.FC<TrainingStackScreenProps<'ReviewQue
           </Animated.View>
         ))}
 
-        <ButtonContainer 
-          backgroundColor={colors.background} 
+        <ButtonContainer
+          backgroundColor={colors.background}
           borderColor="transparent"
           hasBorder={false}
         >

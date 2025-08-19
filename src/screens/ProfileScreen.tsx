@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,8 +7,13 @@ import { spacing, typography, borderRadius, shadows } from '../styles/theme';
 import { ProfileStackScreenProps } from '../types/navigation';
 import { Ionicons } from '@expo/vector-icons';
 
-export const ProfileScreen: React.FC<ProfileStackScreenProps<'ProfileScreen'>> = ({ navigation }) => {
-  const { colors, isDark, setThemeMode, themeMode } = useTheme();
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-native/no-color-literals */
+
+export const ProfileScreen: React.FC<ProfileStackScreenProps<'ProfileScreen'>> = ({
+  navigation: _navigation,
+}) => {
+  const { colors, setThemeMode, themeMode } = useTheme();
   const { user, signOut } = useAuth();
 
   const menuItems = [
@@ -28,7 +33,7 @@ export const ProfileScreen: React.FC<ProfileStackScreenProps<'ProfileScreen'>> =
             <Ionicons name="person" size={48} color={colors.primary} />
           </View>
           <Text style={[styles.userName, { color: colors.text }]}>
-            {user?.username || user?.email || 'Utilisateur'}
+            {user?.username ?? user?.email ?? 'Utilisateur'}
           </Text>
           <Text style={[styles.userRole, { color: colors.textSecondary }]}>
             {user?.isGuest ? 'Mode invité' : 'Sapeur-Pompier 1ère classe'}
@@ -41,21 +46,15 @@ export const ProfileScreen: React.FC<ProfileStackScreenProps<'ProfileScreen'>> =
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.statValue, { color: colors.primary }]}>127</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Interventions
-            </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Interventions</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.statValue, { color: colors.primary }]}>8</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Années service
-            </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Années service</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.statValue, { color: colors.primary }]}>24</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Formations
-            </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Formations</Text>
           </View>
         </View>
 
@@ -65,19 +64,17 @@ export const ProfileScreen: React.FC<ProfileStackScreenProps<'ProfileScreen'>> =
               key={item.id}
               style={[
                 styles.menuItem,
-                { 
+                {
                   backgroundColor: colors.surface,
                   borderBottomWidth: index < menuItems.length - 1 ? 1 : 0,
                   borderBottomColor: colors.border,
-                }
+                },
               ]}
               activeOpacity={0.7}
             >
               <View style={styles.menuItemContent}>
                 <Ionicons name={item.icon} size={22} color={colors.textSecondary} />
-                <Text style={[styles.menuItemText, { color: colors.text }]}>
-                  {item.title}
-                </Text>
+                <Text style={[styles.menuItemText, { color: colors.text }]}>{item.title}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
@@ -85,31 +82,37 @@ export const ProfileScreen: React.FC<ProfileStackScreenProps<'ProfileScreen'>> =
         </View>
 
         <View style={[styles.themeSection, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.themeSectionTitle, { color: colors.text }]}>
-            Apparence
-          </Text>
+          <Text style={[styles.themeSectionTitle, { color: colors.text }]}>Apparence</Text>
           <View style={styles.themeOptions}>
-            {(['auto', 'light', 'dark'] as const).map((mode) => (
+            {(['auto', 'light', 'dark'] as const).map(mode => (
               <TouchableOpacity
                 key={mode}
                 style={[
                   styles.themeOption,
-                  { 
+                  {
                     backgroundColor: themeMode === mode ? colors.primary : colors.background,
                     borderColor: colors.border,
-                  }
+                  },
                 ]}
                 onPress={() => setThemeMode(mode)}
               >
-                <Ionicons 
-                  name={mode === 'auto' ? 'phone-portrait-outline' : mode === 'light' ? 'sunny-outline' : 'moon-outline'} 
-                  size={20} 
-                  color={themeMode === mode ? '#FFFFFF' : colors.textSecondary} 
+                <Ionicons
+                  name={
+                    mode === 'auto'
+                      ? 'phone-portrait-outline'
+                      : mode === 'light'
+                        ? 'sunny-outline'
+                        : 'moon-outline'
+                  }
+                  size={20}
+                  color={themeMode === mode ? '#FFFFFF' : colors.textSecondary}
                 />
-                <Text style={[
-                  styles.themeOptionText,
-                  { color: themeMode === mode ? '#FFFFFF' : colors.text }
-                ]}>
+                <Text
+                  style={[
+                    styles.themeOptionText,
+                    { color: themeMode === mode ? '#FFFFFF' : colors.text },
+                  ]}
+                >
                   {mode === 'auto' ? 'Auto' : mode === 'light' ? 'Clair' : 'Sombre'}
                 </Text>
               </TouchableOpacity>
@@ -117,34 +120,30 @@ export const ProfileScreen: React.FC<ProfileStackScreenProps<'ProfileScreen'>> =
           </View>
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.logoutButton, { backgroundColor: colors.surface }]}
           activeOpacity={0.7}
-          onPress={async () => {
-            Alert.alert(
-              'Déconnexion',
-              'Êtes-vous sûr de vouloir vous déconnecter ?',
-              [
-                { text: 'Annuler', style: 'cancel' },
-                { 
-                  text: 'Déconnexion', 
-                  style: 'destructive',
-                  onPress: async () => {
+          onPress={() => {
+            Alert.alert('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
+              { text: 'Annuler', style: 'cancel' },
+              {
+                text: 'Déconnexion',
+                style: 'destructive',
+                onPress: () => {
+                  void (async () => {
                     try {
                       await signOut();
-                    } catch (error) {
+                    } catch {
                       Alert.alert('Erreur', 'Impossible de se déconnecter');
                     }
-                  }
-                }
-              ]
-            );
+                  })();
+                },
+              },
+            ]);
           }}
         >
           <Ionicons name="log-out-outline" size={22} color={colors.primary} />
-          <Text style={[styles.logoutText, { color: colors.primary }]}>
-            Déconnexion
-          </Text>
+          <Text style={[styles.logoutText, { color: colors.primary }]}>Déconnexion</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import React from /* eslint-disable react-native/no-inline-styles, react-native/no-color-literals */ 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -15,9 +15,15 @@ export const RankingScreen = () => {
   ];
 
   const getRankColor = (rank: number) => {
-    if (rank === 1) return '#FFD700';
-    if (rank === 2) return '#C0C0C0';
-    if (rank === 3) return '#CD7F32';
+    if (rank === 1) {
+      return '#FFD700';
+    }
+    if (rank === 2) {
+      return '#C0C0C0';
+    }
+    if (rank === 3) {
+      return '#CD7F32';
+    }
     return colors.textSecondary;
   };
 
@@ -45,7 +51,13 @@ export const RankingScreen = () => {
             <Ionicons name="trophy" size={24} color="#FFD700" />
           </View>
           <Text style={[styles.podiumRank, { color: '#FFD700' }]}>1</Text>
-          <View style={[styles.podiumAvatar, styles.podiumAvatarFirst, { backgroundColor: colors.background }]}>
+          <View
+            style={[
+              styles.podiumAvatar,
+              styles.podiumAvatarFirst,
+              { backgroundColor: colors.background },
+            ]}
+          >
             <Text style={styles.podiumEmoji}>👩</Text>
           </View>
           <Text style={[styles.podiumName, { color: colors.text }]}>Sophie</Text>
@@ -63,7 +75,7 @@ export const RankingScreen = () => {
       </View>
 
       <View style={styles.listContainer}>
-        {mockRankings.map((player) => (
+        {mockRankings.map(player => (
           <View key={player.rank} style={[styles.rankItem, { backgroundColor: colors.surface }]}>
             <View style={styles.rankLeft}>
               <Text style={[styles.rankNumber, { color: getRankColor(player.rank) }]}>
@@ -82,7 +94,9 @@ export const RankingScreen = () => {
             <View style={styles.rankRight}>
               {player.trend === 'up' && <Ionicons name="arrow-up" size={20} color="#4CAF50" />}
               {player.trend === 'down' && <Ionicons name="arrow-down" size={20} color="#F44336" />}
-              {player.trend === 'stable' && <Ionicons name="remove" size={20} color={colors.textSecondary} />}
+              {player.trend === 'stable' && (
+                <Ionicons name="remove" size={20} color={colors.textSecondary} />
+              )}
             </View>
           </View>
         ))}
@@ -90,9 +104,7 @@ export const RankingScreen = () => {
 
       <View style={[styles.comingSoonBanner, { backgroundColor: colors.warning }]}>
         <Ionicons name="construct" size={24} color="#FFF" />
-        <Text style={styles.comingSoonText}>
-          Fonctionnalité complète bientôt disponible
-        </Text>
+        <Text style={styles.comingSoonText}>Fonctionnalité complète bientôt disponible</Text>
       </View>
     </ScrollView>
   );

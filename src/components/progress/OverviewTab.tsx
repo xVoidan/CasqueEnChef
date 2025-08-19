@@ -1,4 +1,4 @@
-import React from 'react';
+import React from /* eslint-disable @typescript-eslint/no-explicit-any */ 'react';
 import { View, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -9,7 +9,7 @@ import { shadows, borderRadius } from '../../styles/theme';
 const { width } = Dimensions.get('window');
 
 interface OverviewTabProps {
-  weeklyData: any;
+  weeklyData: { name: string; value: number; color: string; percentage: number };
   totalStats: {
     totalSessions: number;
     totalQuestions: number;
@@ -54,8 +54,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ weeklyData, totalStats
   ];
 
   return (
-    <ScrollView 
-      style={styles.container} 
+    <ScrollView
+      style={styles.container}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
@@ -65,17 +65,15 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ weeklyData, totalStats
           <Animated.View
             key={stat.label}
             entering={FadeInDown.delay(index * 100)}
-            style={[
-              styles.quickStatCard, 
-              { backgroundColor: colors.surface },
-              shadows.sm
-            ]}
+            style={[styles.quickStatCard, { backgroundColor: colors.surface }, shadows.sm]}
           >
             <View style={[styles.iconContainer, { backgroundColor: `${stat.color}15` }]}>
               <Ionicons name={stat.icon as any} size={24} color={stat.color} />
             </View>
             <Text style={[styles.quickStatValue, { color: colors.text }]}>{stat.value}</Text>
-            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>{stat.label}</Text>
+            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>
+              {stat.label}
+            </Text>
           </Animated.View>
         ))}
       </View>
@@ -83,21 +81,15 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ weeklyData, totalStats
       {/* Performance Chart */}
       <Animated.View
         entering={FadeInDown.delay(300)}
-        style={[
-          styles.chartCard, 
-          { backgroundColor: colors.surface },
-          shadows.sm
-        ]}
+        style={[styles.chartCard, { backgroundColor: colors.surface }, shadows.sm]}
       >
         <View style={styles.chartHeader}>
-          <Text style={[styles.chartTitle, { color: colors.text }]}>
-            Performance hebdomadaire
-          </Text>
+          <Text style={[styles.chartTitle, { color: colors.text }]}>Performance hebdomadaire</Text>
           <View style={[styles.badge, { backgroundColor: `${colors.primary}15` }]}>
             <Text style={[styles.badgeText, { color: colors.primary }]}>7 derniers jours</Text>
           </View>
         </View>
-        
+
         {weeklyData.datasets[0].data.some((val: number) => val > 0) ? (
           <LineChart
             data={weeklyData}
@@ -108,8 +100,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ weeklyData, totalStats
               backgroundGradientFrom: colors.surface,
               backgroundGradientTo: colors.surface,
               decimalPlaces: 0,
-              color: (opacity = 1) => colors.primary,
-              labelColor: (opacity = 1) => colors.textSecondary,
+              color: (_opacity = 1) => colors.primary,
+              labelColor: (_opacity = 1) => colors.textSecondary,
               style: {
                 borderRadius: 16,
               },
@@ -150,28 +142,16 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ weeklyData, totalStats
       <View style={styles.statsGrid}>
         <Animated.View
           entering={FadeInDown.delay(400)}
-          style={[
-            styles.statCard, 
-            { backgroundColor: colors.surface },
-            shadows.sm
-          ]}
+          style={[styles.statCard, { backgroundColor: colors.surface }, shadows.sm]}
         >
           <Ionicons name="school-outline" size={32} color={colors.primary} />
-          <Text style={[styles.statValue, { color: colors.text }]}>
-            {totalStats.totalSessions}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-            Sessions totales
-          </Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{totalStats.totalSessions}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Sessions totales</Text>
         </Animated.View>
 
         <Animated.View
           entering={FadeInDown.delay(500)}
-          style={[
-            styles.statCard, 
-            { backgroundColor: colors.surface },
-            shadows.sm
-          ]}
+          style={[styles.statCard, { backgroundColor: colors.surface }, shadows.sm]}
         >
           <Ionicons name="help-circle-outline" size={32} color={colors.primary} />
           <Text style={[styles.statValue, { color: colors.text }]}>
@@ -184,36 +164,22 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ weeklyData, totalStats
 
         <Animated.View
           entering={FadeInDown.delay(600)}
-          style={[
-            styles.statCard, 
-            { backgroundColor: colors.surface },
-            shadows.sm
-          ]}
+          style={[styles.statCard, { backgroundColor: colors.surface }, shadows.sm]}
         >
           <Ionicons name="checkmark-circle-outline" size={32} color={colors.primary} />
-          <Text style={[styles.statValue, { color: colors.text }]}>
-            {totalStats.averageScore}%
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-            Taux de réussite
-          </Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{totalStats.averageScore}%</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Taux de réussite</Text>
         </Animated.View>
 
         <Animated.View
           entering={FadeInDown.delay(700)}
-          style={[
-            styles.statCard, 
-            { backgroundColor: colors.surface },
-            shadows.sm
-          ]}
+          style={[styles.statCard, { backgroundColor: colors.surface }, shadows.sm]}
         >
           <Ionicons name="time-outline" size={32} color={colors.primary} />
           <Text style={[styles.statValue, { color: colors.text }]}>
             {formatTime(totalStats.totalTime)}
           </Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-            Temps total
-          </Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Temps total</Text>
         </Animated.View>
       </View>
     </ScrollView>

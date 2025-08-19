@@ -40,18 +40,17 @@ class RankingService {
    */
   async getGlobalRanking(limit: number = 100, offset: number = 0): Promise<RankingUser[]> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_classement_global', { 
-          p_limit: limit, 
-          p_offset: offset 
-        });
+      const { data, error } = await supabase.rpc('get_classement_global', {
+        p_limit: limit,
+        p_offset: offset,
+      });
 
       if (error) {
         console.error('Erreur récupération classement global:', error);
         return [];
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       console.error('Erreur service classement global:', error);
       return [];
@@ -62,24 +61,23 @@ class RankingService {
    * Récupère le classement par type de concours
    */
   async getRankingByConcours(
-    concoursType: 'caporal' | 'lieutenant', 
-    limit: number = 100, 
+    concoursType: 'caporal' | 'lieutenant',
+    limit: number = 100,
     offset: number = 0
   ): Promise<RankingUser[]> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_classement_par_concours', { 
-          p_concours_type: concoursType,
-          p_limit: limit, 
-          p_offset: offset 
-        });
+      const { data, error } = await supabase.rpc('get_classement_par_concours', {
+        p_concours_type: concoursType,
+        p_limit: limit,
+        p_offset: offset,
+      });
 
       if (error) {
         console.error('Erreur récupération classement par concours:', error);
         return this.getMockRankings(concoursType);
       }
 
-      return data || this.getMockRankings(concoursType);
+      return data ?? this.getMockRankings(concoursType);
     } catch (error) {
       console.error('Erreur service classement par concours:', error);
       return this.getMockRankings(concoursType);
@@ -91,18 +89,17 @@ class RankingService {
    */
   async getWeeklyRanking(limit: number = 100, offset: number = 0): Promise<RankingUser[]> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_classement_hebdomadaire', { 
-          p_limit: limit, 
-          p_offset: offset 
-        });
+      const { data, error } = await supabase.rpc('get_classement_hebdomadaire', {
+        p_limit: limit,
+        p_offset: offset,
+      });
 
       if (error) {
         console.error('Erreur récupération classement hebdomadaire:', error);
         return [];
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       console.error('Erreur service classement hebdomadaire:', error);
       return [];
@@ -114,18 +111,17 @@ class RankingService {
    */
   async getMonthlyRanking(limit: number = 100, offset: number = 0): Promise<RankingUser[]> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_classement_mensuel', { 
-          p_limit: limit, 
-          p_offset: offset 
-        });
+      const { data, error } = await supabase.rpc('get_classement_mensuel', {
+        p_limit: limit,
+        p_offset: offset,
+      });
 
       if (error) {
         console.error('Erreur récupération classement mensuel:', error);
         return [];
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       console.error('Erreur service classement mensuel:', error);
       return [];
@@ -137,17 +133,16 @@ class RankingService {
    */
   async getUserPositions(userId?: string): Promise<UserPosition[]> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_position_utilisateur', { 
-          p_user_id: userId || null
-        });
+      const { data, error } = await supabase.rpc('get_position_utilisateur', {
+        p_user_id: userId ?? null,
+      });
 
       if (error) {
         console.error('Erreur récupération position utilisateur:', error);
         return [];
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       console.error('Erreur service position utilisateur:', error);
       return [];
@@ -158,24 +153,23 @@ class RankingService {
    * Récupère le classement par thématique
    */
   async getRankingByTheme(
-    themeId: string, 
-    limit: number = 100, 
+    themeId: string,
+    limit: number = 100,
     offset: number = 0
   ): Promise<ThemeRanking[]> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_classement_par_theme', { 
-          p_theme_id: themeId,
-          p_limit: limit, 
-          p_offset: offset 
-        });
+      const { data, error } = await supabase.rpc('get_classement_par_theme', {
+        p_theme_id: themeId,
+        p_limit: limit,
+        p_offset: offset,
+      });
 
       if (error) {
         console.error('Erreur récupération classement par thème:', error);
         return [];
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       console.error('Erreur service classement par thème:', error);
       return [];
@@ -187,26 +181,38 @@ class RankingService {
    */
   async searchUserInRanking(searchTerm: string): Promise<RankingUser[]> {
     try {
-      const { data, error } = await supabase
-        .rpc('rechercher_utilisateur_classement', { 
-          p_search_term: searchTerm
-        });
+      const { data, error } = await supabase.rpc('rechercher_utilisateur_classement', {
+        p_search_term: searchTerm,
+      });
 
       if (error) {
         console.error('Erreur recherche utilisateur:', error);
         return [];
       }
 
-      return data?.map((user: any) => ({
-        rang: user.rang_global,
-        user_id: user.user_id,
-        username: user.username,
-        avatar_url: user.avatar_url,
-        points_total: user.points_total,
-        niveau: user.niveau,
-        concours_type: user.concours_type,
-        est_utilisateur_actuel: false
-      })) || [];
+      return (
+        data?.map(
+          (user: {
+            rang_global: number;
+            user_id: string;
+            username: string;
+            avatar_url: string | null;
+            points_total: number;
+            streak_actuel: number;
+            sessions_terminees: number;
+            taux_reussite: number;
+          }) => ({
+            rang: user.rang_global,
+            user_id: user.user_id,
+            username: user.username,
+            avatar_url: user.avatar_url,
+            points_total: user.points_total,
+            niveau: user.niveau,
+            concours_type: user.concours_type,
+            est_utilisateur_actuel: false,
+          })
+        ) ?? []
+      );
     } catch (error) {
       console.error('Erreur service recherche utilisateur:', error);
       return [];
@@ -235,18 +241,27 @@ class RankingService {
       user_id: `mock-${index}`,
       username: user.name,
       avatar_url: user.avatar,
-      points_total: type === 'hebdomadaire' ? Math.floor(user.points / 10) : 
-                   type === 'mensuel' ? Math.floor(user.points / 3) : 
-                   user.points,
-      points_periode: type === 'hebdomadaire' || type === 'mensuel' ? 
-                      Math.floor(user.points / (type === 'hebdomadaire' ? 10 : 3)) : 
-                      undefined,
+      points_total:
+        type === 'hebdomadaire'
+          ? Math.floor(user.points / 10)
+          : type === 'mensuel'
+            ? Math.floor(user.points / 3)
+            : user.points,
+      points_periode:
+        (type === 'hebdomadaire' ?? type === 'mensuel')
+          ? Math.floor(user.points / (type === 'hebdomadaire' ? 10 : 3))
+          : undefined,
       niveau: index < 3 ? 'avance' : index < 6 ? 'intermediaire' : 'debutant',
-      concours_type: type === 'caporal' ? 'caporal' : 
-                     type === 'lieutenant' ? 'lieutenant' : 
-                     index % 2 === 0 ? 'caporal' : 'lieutenant',
+      concours_type:
+        type === 'caporal'
+          ? 'caporal'
+          : type === 'lieutenant'
+            ? 'lieutenant'
+            : index % 2 === 0
+              ? 'caporal'
+              : 'lieutenant',
       evolution: user.evolution,
-      est_utilisateur_actuel: index === 3
+      est_utilisateur_actuel: index === 3,
     }));
   }
 
@@ -259,20 +274,20 @@ class RankingService {
         type_classement: 'global',
         rang: 42,
         points: 1850,
-        total_participants: 523
+        total_participants: 523,
       },
       {
         type_classement: 'hebdomadaire',
         rang: 15,
         points: 185,
-        total_participants: 287
+        total_participants: 287,
       },
       {
         type_classement: 'mensuel',
         rang: 28,
         points: 620,
-        total_participants: 412
-      }
+        total_participants: 412,
+      },
     ];
   }
 
@@ -296,7 +311,7 @@ class RankingService {
       questions_reussies: user.reussies,
       taux_reussite: user.taux,
       temps_moyen: user.temps,
-      est_utilisateur_actuel: index === 2
+      est_utilisateur_actuel: index === 2,
     }));
   }
 
@@ -305,8 +320,7 @@ class RankingService {
    */
   async updateRanks(): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .rpc('update_rangs');
+      const { error } = await supabase.rpc('update_rangs');
 
       if (error) {
         console.error('Erreur mise à jour des rangs:', error);

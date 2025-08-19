@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
+import React, {
+  /* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-misused-promises */ useState,
+} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
@@ -17,6 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { spacing, typography, borderRadius } from '../styles/theme';
 import { AuthStackScreenProps } from '../types/navigation';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../constants/styleConstants';
 
 export const LoginScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigation }) => {
   const { colors } = useTheme();
@@ -33,34 +36,35 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigati
 
     try {
       await signIn(email, password);
-    } catch (err: any) {
-      Alert.alert('Erreur de connexion', err.message);
+    } catch (err) {
+      Alert.alert(
+        'Erreur de connexion',
+        err instanceof Error ? err.message : 'Une erreur est survenue'
+      );
     }
   };
 
   const handleGuestSignIn = async () => {
     try {
       await signInAsGuest();
-    } catch (err: any) {
-      Alert.alert('Erreur', err.message);
+    } catch (err) {
+      Alert.alert('Erreur', err instanceof Error ? err.message : 'Une erreur est survenue');
     }
   };
 
   React.useEffect(() => {
     if (error) {
-      Alert.alert('Erreur', error.message, [
-        { text: 'OK', onPress: clearError }
-      ]);
+      Alert.alert('Erreur', error.message, [{ text: 'OK', onPress: clearError }]);
     }
   }, [error]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -69,9 +73,7 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigati
             <View style={[styles.logo, { backgroundColor: colors.primary }]}>
               <Ionicons name="shield-checkmark" size={48} color="#FFFFFF" />
             </View>
-            <Text style={[styles.appName, { color: colors.text }]}>
-              CasqueEnMain
-            </Text>
+            <Text style={[styles.appName, { color: colors.text }]}>CasqueEnMain</Text>
             <Text style={[styles.tagline, { color: colors.textSecondary }]}>
               Votre compagnon de formation
             </Text>
@@ -79,10 +81,13 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigati
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.text }]}>
-                Email
-              </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
                 <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -98,10 +103,13 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigati
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.text }]}>
-                Mot de passe
-              </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.label, { color: colors.text }]}>Mot de passe</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
                 <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -113,16 +121,16 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigati
                   editable={!loading}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} disabled={loading}>
-                  <Ionicons 
-                    name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                    size={20} 
-                    color={colors.textSecondary} 
+                  <Ionicons
+                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={20}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.forgotPassword}
               onPress={() => navigation.navigate('ForgotPassword')}
               disabled={loading}
@@ -132,31 +140,34 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigati
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.signInButton, { backgroundColor: colors.primary, opacity: loading ? 0.7 : 1 }]}
+            <TouchableOpacity
+              style={[
+                styles.signInButton,
+                { backgroundColor: colors.primary },
+                loading ? styles.buttonDisabled : null,
+              ]}
               activeOpacity={0.8}
               onPress={handleSignIn}
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={COLORS.white} />
               ) : (
-                <Text style={styles.signInButtonText}>
-                  Se connecter
-                </Text>
+                <Text style={styles.signInButtonText}>Se connecter</Text>
               )}
             </TouchableOpacity>
 
             <View style={styles.dividerContainer}>
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
-              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>
-                OU
-              </Text>
+              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>OU</Text>
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
             </View>
 
-            <TouchableOpacity 
-              style={[styles.secondaryButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            <TouchableOpacity
+              style={[
+                styles.secondaryButton,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
               activeOpacity={0.8}
               onPress={handleGuestSignIn}
               disabled={loading}
@@ -172,13 +183,8 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigati
             <Text style={[styles.footerText, { color: colors.textSecondary }]}>
               Pas encore de compte ?
             </Text>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('SignUp')}
-              disabled={loading}
-            >
-              <Text style={[styles.signUpLink, { color: colors.primary }]}>
-                S'inscrire
-              </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')} disabled={loading}>
+              <Text style={[styles.signUpLink, { color: colors.primary }]}>S'inscrire</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -257,7 +263,7 @@ const styles = StyleSheet.create({
   },
   signInButtonText: {
     ...typography.bodyBold,
-    color: '#FFFFFF',
+    color: COLORS.white,
   },
   dividerContainer: {
     flexDirection: 'row',
@@ -296,5 +302,8 @@ const styles = StyleSheet.create({
   },
   signUpLink: {
     ...typography.bodyBold,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });

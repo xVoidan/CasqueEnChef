@@ -41,12 +41,13 @@ export const configureFonts = () => {
 
     // Patch global pour s'assurer que les fonts sont disponibles
     if (typeof global !== 'undefined') {
-      (global as any).__REACT_NAVIGATION_FONTS__ = defaultFonts;
+      (global as unknown as { REACT_NAVIGATION_DEVTOOLS?: unknown }).__REACT_NAVIGATION_FONTS__ =
+        defaultFonts;
     }
 
     return defaultFonts;
   }
-  
+
   return {};
 };
 

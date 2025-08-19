@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, ViewStyle } from 'react-native';
+import { View, ViewStyle, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../styles/theme';
+
+/* eslint-disable react-native/no-inline-styles */
 
 interface ButtonContainerProps {
   children: React.ReactNode;
@@ -19,10 +21,10 @@ export const ButtonContainer: React.FC<ButtonContainerProps> = ({
   hasBorder = true,
 }) => {
   const insets = useSafeAreaInsets();
-  
+
   // Calcul dynamique : insets.bottom + padding minimal, avec minimum de 90px
   const dynamicPaddingBottom = Math.max(insets.bottom + spacing.lg + 10, 90);
-  
+
   return (
     <View
       style={[
@@ -30,7 +32,7 @@ export const ButtonContainer: React.FC<ButtonContainerProps> = ({
           paddingHorizontal: spacing.lg,
           paddingTop: spacing.sm,
           paddingBottom: dynamicPaddingBottom,
-          borderTopWidth: hasBorder ? 1 : 0,
+          borderTopWidth: hasBorder ? StyleSheet.hairlineWidth : 0,
           borderTopColor: borderColor,
           backgroundColor,
         },

@@ -17,13 +17,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
   const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
-  
-  const isDark = themeMode === 'auto' 
-    ? systemColorScheme === 'dark'
-    : themeMode === 'dark';
+
+  const isDark = themeMode === 'auto' ? systemColorScheme === 'dark' : themeMode === 'dark';
 
   useEffect(() => {
-    loadThemeMode();
+    void loadThemeMode();
   }, []);
 
   const loadThemeMode = async () => {

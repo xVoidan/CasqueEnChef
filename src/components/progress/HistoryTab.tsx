@@ -1,10 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  // ActivityIndicator removed - not used
+} from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { progressService, SessionDetailed } from '../../services/progressService';
 import { shadows, borderRadius } from '../../styles/theme';
+import { COLORS } from '../../constants/styleConstants';
 
 interface SessionData {
   id: number;
@@ -27,15 +36,11 @@ interface HistoryTabProps {
 export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
   const { colors } = useTheme();
   const [sessions, setSessions] = useState<SessionData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<SessionData | null>(null);
   const [filter, setFilter] = useState<'all' | 'success' | 'failed'>('all');
 
-  useEffect(() => {
-    fetchSessions();
-  }, [userId]);
-
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     if (!userId) {
       setLoading(false);
       return;
@@ -43,7 +48,7 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
 
     try {
       const detailedSessions = await progressService.getUserSessionsDetailed(userId, 50);
-      
+
       const formattedSessions = detailedSessions.map((session: SessionDetailed) => ({
         id: session.session_id,
         created_at: session.created_at,
@@ -64,22 +69,34 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void fetchSessions();
+  }, [fetchSessions]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Il y a moins d\'une heure';
-    if (diffInHours < 24) return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
-    if (diffInHours < 48) return 'Hier';
-    if (diffInHours < 168) return `Il y a ${Math.floor(diffInHours / 24)} jours`;
-    
-    return date.toLocaleDateString('fr-FR', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+
+    if (diffInHours < 1) {
+      return "Il y a moins d'une heure";
+    }
+    if (diffInHours < 24) {
+      return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+    }
+    if (diffInHours < 48) {
+      return 'Hier';
+    }
+    if (diffInHours < 168) {
+      return `Il y a ${Math.floor(diffInHours / 24)} jours`;
+    }
+
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     });
   };
 
@@ -90,15 +107,25 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10B981';
-    if (score >= 60) return '#F59E0B';
+    if (score >= 80) {
+      return '#10B981';
+    }
+    if (score >= 60) {
+      return '#F59E0B';
+    }
     return '#EF4444';
   };
 
   const filteredSessions = sessions.filter(session => {
-    if (filter === 'all') return true;
-    if (filter === 'success') return session.score >= 70;
-    if (filter === 'failed') return session.score < 70;
+    if (filter === 'all') {
+      return true;
+    }
+    if (filter === 'success') {
+      return session.score >= 70;
+    }
+    if (filter === 'failed') {
+      return session.score < 70;
+    }
     return true;
   });
 
@@ -106,70 +133,62 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
     const scoreColor = getScoreColor(item.score);
 
     return (
-      <Animated.View
-        entering={FadeInDown.delay(index * 50)}
-      >
+      <Animated.View entering={FadeInDown.delay(index * 50)}>
         <View style={[styles.sessionCard, { backgroundColor: colors.surface }, shadows.sm]}>
-        <TouchableOpacity
-          onPress={() => setSelectedSession(item)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.sessionHeader}>
-            <View style={styles.sessionInfo}>
-              <Text style={[styles.sessionDate, { color: colors.textSecondary }]}>
-                {formatDate(item.created_at)}
-              </Text>
-              <View style={styles.themeTags}>
-                {item.themes.slice(0, 2).map((theme, idx) => (
-                  <View key={idx} style={[styles.tag, { backgroundColor: colors.primary + '20' }]}>
-                    <Text style={[styles.tagText, { color: colors.primary }]}>
-                      {theme}
+          <TouchableOpacity onPress={() => setSelectedSession(item)} activeOpacity={0.7}>
+            <View style={styles.sessionHeader}>
+              <View style={styles.sessionInfo}>
+                <Text style={[styles.sessionDate, { color: colors.textSecondary }]}>
+                  {formatDate(item.created_at)}
+                </Text>
+                <View style={styles.themeTags}>
+                  {item.themes.slice(0, 2).map((theme, idx) => (
+                    <View
+                      key={idx}
+                      style={[styles.tag, { backgroundColor: colors.primary + '20' }]}
+                    >
+                      <Text style={[styles.tagText, { color: colors.primary }]}>{theme}</Text>
+                    </View>
+                  ))}
+                  {item.themes.length > 2 && (
+                    <Text style={[styles.moreThemes, { color: colors.textSecondary }]}>
+                      +{item.themes.length - 2}
                     </Text>
-                  </View>
-                ))}
-                {item.themes.length > 2 && (
-                  <Text style={[styles.moreThemes, { color: colors.textSecondary }]}>
-                    +{item.themes.length - 2}
-                  </Text>
-                )}
+                  )}
+                </View>
+              </View>
+              <View style={[styles.scoreCircle, { backgroundColor: scoreColor + '20' }]}>
+                <Text style={[styles.scoreText, { color: scoreColor }]}>{item.score}%</Text>
               </View>
             </View>
-            <View style={[styles.scoreCircle, { backgroundColor: scoreColor + '20' }]}>
-              <Text style={[styles.scoreText, { color: scoreColor }]}>
-                {item.score}%
-              </Text>
-            </View>
-          </View>
 
-          <View style={styles.sessionStats}>
-            <View style={styles.statItem}>
-              <Ionicons name="help-circle-outline" size={16} color={colors.textSecondary} />
-              <Text style={[styles.statText, { color: colors.text }]}>
-                {item.nombre_reponses_correctes}/{item.nombre_questions}
-              </Text>
+            <View style={styles.sessionStats}>
+              <View style={styles.statItem}>
+                <Ionicons name="help-circle-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.statText, { color: colors.text }]}>
+                  {item.nombre_reponses_correctes}/{item.nombre_questions}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.statText, { color: colors.text }]}>
+                  {formatDuration(item.temps_total)}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="options-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.statText, { color: colors.text }]}>{item.type_session}</Text>
+              </View>
             </View>
-            <View style={styles.statItem}>
-              <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-              <Text style={[styles.statText, { color: colors.text }]}>
-                {formatDuration(item.temps_total)}
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Ionicons name="options-outline" size={16} color={colors.textSecondary} />
-              <Text style={[styles.statText, { color: colors.text }]}>
-                {item.type_session}
-              </Text>
-            </View>
-          </View>
 
-          {item.statut === 'abandonnee' && (
-            <View style={[styles.abandonedBadge, { backgroundColor: colors.error + '20' }]}>
-              <Text style={[styles.abandonedText, { color: colors.error }]}>
-                Session abandonnée
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+            {item.statut === 'abandonnee' && (
+              <View style={[styles.abandonedBadge, { backgroundColor: colors.error + '20' }]}>
+                <Text style={[styles.abandonedText, { color: colors.error }]}>
+                  Session abandonnée
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
       </Animated.View>
     );
@@ -190,7 +209,7 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
           <Text
             style={[
               styles.filterText,
-              filter === 'all' ? { color: '#FFFFFF' } : { color: colors.text },
+              filter === 'all' ? styles.filterTextActive : { color: colors.text },
             ]}
           >
             Toutes
@@ -200,14 +219,14 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
           onPress={() => setFilter('success')}
           style={[
             styles.filterButton,
-            filter === 'success' && { backgroundColor: '#10B981' },
+            filter === 'success' && styles.filterButtonSuccess,
             filter !== 'success' && { backgroundColor: colors.surface },
           ]}
         >
           <Text
             style={[
               styles.filterText,
-              filter === 'success' ? { color: '#FFFFFF' } : { color: colors.text },
+              filter === 'success' ? styles.filterTextActive : { color: colors.text },
             ]}
           >
             Réussies
@@ -217,14 +236,14 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
           onPress={() => setFilter('failed')}
           style={[
             styles.filterButton,
-            filter === 'failed' && { backgroundColor: '#EF4444' },
+            filter === 'failed' && styles.filterButtonError,
             filter !== 'failed' && { backgroundColor: colors.surface },
           ]}
         >
           <Text
             style={[
               styles.filterText,
-              filter === 'failed' ? { color: '#FFFFFF' } : { color: colors.text },
+              filter === 'failed' ? styles.filterTextActive : { color: colors.text },
             ]}
           >
             Échouées
@@ -236,7 +255,7 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
       <FlatList
         data={filteredSessions}
         renderItem={renderSession}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -270,7 +289,7 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ userId }) => {
                   <Ionicons name="close" size={24} color={colors.text} />
                 </TouchableOpacity>
               </View>
-              
+
               <View style={styles.modalBody}>
                 <Text style={[styles.modalDate, { color: colors.textSecondary }]}>
                   {new Date(selectedSession.created_at).toLocaleDateString('fr-FR', {
@@ -444,7 +463,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: COLORS.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -491,8 +510,17 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   reviewButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
+  },
+  filterTextActive: {
+    color: COLORS.white,
+  },
+  filterButtonSuccess: {
+    backgroundColor: COLORS.success,
+  },
+  filterButtonError: {
+    backgroundColor: COLORS.error,
   },
 });

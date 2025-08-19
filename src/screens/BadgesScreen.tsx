@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { badgesService, Badge, Defi, Rang } from '../services/badgesService';
 import { spacing, typography, borderRadius, shadows } from '../styles/theme';
 
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-native/no-color-literals */
+
 const { width } = Dimensions.get('window');
 
 export const BadgesScreen = () => {
@@ -31,21 +34,17 @@ export const BadgesScreen = () => {
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  useEffect(() => {
-    if (user) {
-      loadData();
+  const loadData = useCallback(async () => {
+    if (!user) {
+      return;
     }
-  }, [user]);
-
-  const loadData = async () => {
-    if (!user) return;
 
     setLoading(true);
     try {
       const [badgesData, challengesData, rankData] = await Promise.all([
         badgesService.getUserBadges(user.id),
         badgesService.getUserChallenges(user.id),
-        badgesService.getUserRank(user.id)
+        badgesService.getUserRank(user.id),
       ]);
 
       setBadges(badgesData);
@@ -64,25 +63,33 @@ export const BadgesScreen = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      void loadData();
+    }
+  }, [user, loadData]);
 
   const renderTabButton = (tab: 'badges' | 'challenges' | 'rank', title: string, icon: string) => (
     <TouchableOpacity
       onPress={() => setSelectedTab(tab)}
       style={[
         styles.tabButton,
-        selectedTab === tab && { borderBottomColor: colors.primary, borderBottomWidth: 2 }
+        selectedTab === tab && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
       ]}
     >
-      <Ionicons 
-        name={icon as any} 
-        size={24} 
-        color={selectedTab === tab ? colors.primary : colors.textSecondary} 
+      <Ionicons
+        name={icon as keyof typeof Ionicons.glyphMap}
+        size={24}
+        color={selectedTab === tab ? colors.primary : colors.textSecondary}
       />
-      <Text style={[
-        styles.tabButtonText,
-        { color: selectedTab === tab ? colors.primary : colors.textSecondary }
-      ]}>
+      <Text
+        style={[
+          styles.tabButtonText,
+          { color: selectedTab === tab ? colors.primary : colors.textSecondary },
+        ]}
+      >
         {title}
       </Text>
     </TouchableOpacity>
@@ -90,9 +97,8 @@ export const BadgesScreen = () => {
 
   const renderBadges = () => {
     const stats = badgesService.getBadgeStats(badges);
-    const filteredBadges = selectedCategory === 'all' 
-      ? badges 
-      : badges.filter(b => b.categorie === selectedCategory);
+    const filteredBadges =
+      selectedCategory === 'all' ? badges : badges.filter(b => b.categorie === selectedCategory);
 
     const categories = [
       { key: 'all', label: 'Tous', icon: 'apps' },
@@ -113,16 +119,16 @@ export const BadgesScreen = () => {
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.progressContainer}>
             <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
               <Animated.View
                 style={[
                   styles.progressFill,
-                  { 
+                  {
                     backgroundColor: colors.primary,
-                    width: `${stats.percentageComplete}%`
-                  }
+                    width: `${stats.percentageComplete}%`,
+                  },
                 ]}
               />
             </View>
@@ -133,34 +139,34 @@ export const BadgesScreen = () => {
         </View>
 
         {/* Filtres par catégorie */}
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.categoriesContainer}
         >
-          {categories.map((cat) => (
+          {categories.map(cat => (
             <TouchableOpacity
               key={cat.key}
               onPress={() => setSelectedCategory(cat.key)}
               style={[
                 styles.categoryChip,
-                { 
-                  backgroundColor: selectedCategory === cat.key 
-                    ? colors.primary 
-                    : colors.surface,
-                  borderColor: colors.border
-                }
+                {
+                  backgroundColor: selectedCategory === cat.key ? colors.primary : colors.surface,
+                  borderColor: colors.border,
+                },
               ]}
             >
-              <Ionicons 
-                name={cat.icon as any} 
-                size={16} 
-                color={selectedCategory === cat.key ? '#FFF' : colors.textSecondary} 
+              <Ionicons
+                name={cat.icon as keyof typeof Ionicons.glyphMap}
+                size={16}
+                color={selectedCategory === cat.key ? '#FFF' : colors.textSecondary}
               />
-              <Text style={[
-                styles.categoryChipText,
-                { color: selectedCategory === cat.key ? '#FFF' : colors.textSecondary }
-              ]}>
+              <Text
+                style={[
+                  styles.categoryChipText,
+                  { color: selectedCategory === cat.key ? '#FFF' : colors.textSecondary },
+                ]}
+              >
                 {cat.label}
               </Text>
             </TouchableOpacity>
@@ -179,25 +185,25 @@ export const BadgesScreen = () => {
                 onPress={() => setSelectedBadge(badge)}
                 style={[
                   styles.badgeCard,
-                  { 
+                  {
                     backgroundColor: colors.surface,
-                    opacity: badge.earned ? 1 : 0.6
+                    opacity: badge.earned ? 1 : 0.6,
                   },
-                  shadows.sm
+                  shadows.sm,
                 ]}
               >
-                <View style={[
-                  styles.badgeIconContainer,
-                  { 
-                    backgroundColor: badge.earned 
-                      ? badge.couleur + '20'
-                      : colors.background
-                  }
-                ]}>
-                  <Ionicons 
-                    name={badge.icone as any} 
-                    size={32} 
-                    color={badge.earned ? badge.couleur : colors.textSecondary} 
+                <View
+                  style={[
+                    styles.badgeIconContainer,
+                    {
+                      backgroundColor: badge.earned ? badge.couleur + '20' : colors.background,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={badge.icone as keyof typeof Ionicons.glyphMap}
+                    size={32}
+                    color={badge.earned ? badge.couleur : colors.textSecondary}
                   />
                   {badge.earned && (
                     <View style={[styles.badgeCheck, { backgroundColor: badge.couleur }]}>
@@ -206,10 +212,10 @@ export const BadgesScreen = () => {
                   )}
                 </View>
 
-                <Text 
+                <Text
                   style={[
-                    styles.badgeName, 
-                    { color: badge.earned ? colors.text : colors.textSecondary }
+                    styles.badgeName,
+                    { color: badge.earned ? colors.text : colors.textSecondary },
                   ]}
                   numberOfLines={2}
                 >
@@ -223,11 +229,9 @@ export const BadgesScreen = () => {
                       key={i}
                       style={[
                         styles.badgeLevelDot,
-                        { 
-                          backgroundColor: i < badge.niveau 
-                            ? badge.couleur 
-                            : colors.border
-                        }
+                        {
+                          backgroundColor: i < badge.niveau ? badge.couleur : colors.border,
+                        },
                       ]}
                     />
                   ))}
@@ -251,8 +255,14 @@ export const BadgesScreen = () => {
         style={[styles.challengeCard, { backgroundColor: colors.surface }, shadows.sm]}
       >
         <View style={styles.challengeHeader}>
-          <View style={[styles.challengeIconContainer, { backgroundColor: challenge.couleur + '20' }]}>
-            <Ionicons name={challenge.icone as any} size={24} color={challenge.couleur} />
+          <View
+            style={[styles.challengeIconContainer, { backgroundColor: challenge.couleur + '20' }]}
+          >
+            <Ionicons
+              name={challenge.icone as keyof typeof Ionicons.glyphMap}
+              size={24}
+              color={challenge.couleur}
+            />
           </View>
           <View style={styles.challengeInfo}>
             <Text style={[styles.challengeName, { color: colors.text }]}>{challenge.nom}</Text>
@@ -283,10 +293,10 @@ export const BadgesScreen = () => {
             <View
               style={[
                 styles.challengeProgressFill,
-                { 
+                {
                   backgroundColor: challenge.couleur,
-                  width: `${Math.min(challenge.pourcentage_complete, 100)}%`
-                }
+                  width: `${Math.min(challenge.pourcentage_complete, 100)}%`,
+                },
               ]}
             />
           </View>
@@ -345,33 +355,26 @@ export const BadgesScreen = () => {
   };
 
   const renderRank = () => {
-    if (!rank) return null;
+    if (!rank) {
+      return null;
+    }
 
     const rankColors = {
-      gradient: isDark 
-        ? ['#1F2937', '#111827']
-        : ['#F3F4F6', '#E5E7EB']
+      gradient: isDark ? ['#1F2937', '#111827'] : ['#F3F4F6', '#E5E7EB'],
     };
 
     return (
       <ScrollView showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={rankColors.gradient}
-          style={[styles.rankCard, shadows.md]}
-        >
+        <LinearGradient colors={rankColors.gradient} style={[styles.rankCard, shadows.md]}>
           <View style={styles.rankHeader}>
-            <Text style={[styles.rankTitle, { color: colors.text }]}>
-              Votre rang actuel
-            </Text>
+            <Text style={[styles.rankTitle, { color: colors.text }]}>Votre rang actuel</Text>
             <View style={[styles.rankBadge, { backgroundColor: colors.primary }]}>
               <Ionicons name="trophy" size={24} color="#FFF" />
             </View>
           </View>
 
           <View style={styles.rankInfo}>
-            <Text style={[styles.rankName, { color: colors.primary }]}>
-              {rank.rang_actuel}
-            </Text>
+            <Text style={[styles.rankName, { color: colors.primary }]}>{rank.rang_actuel}</Text>
             <Text style={[styles.rankLevel, { color: colors.textSecondary }]}>
               Niveau {rank.niveau_actuel}
             </Text>
@@ -392,10 +395,10 @@ export const BadgesScreen = () => {
               <View
                 style={[
                   styles.rankProgressFill,
-                  { 
+                  {
                     backgroundColor: colors.primary,
-                    width: `${Math.min(rank.progression_rang, 100)}%`
-                  }
+                    width: `${Math.min(rank.progression_rang, 100)}%`,
+                  },
                 ]}
               />
             </View>
@@ -485,14 +488,13 @@ export const BadgesScreen = () => {
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             {selectedBadge && (
               <>
-                <View style={[
-                  styles.modalBadgeIcon,
-                  { backgroundColor: selectedBadge.couleur + '20' }
-                ]}>
-                  <Ionicons 
-                    name={selectedBadge.icone as any} 
-                    size={48} 
-                    color={selectedBadge.couleur} 
+                <View
+                  style={[styles.modalBadgeIcon, { backgroundColor: selectedBadge.couleur + '20' }]}
+                >
+                  <Ionicons
+                    name={selectedBadge.icone as keyof typeof Ionicons.glyphMap}
+                    size={48}
+                    color={selectedBadge.couleur}
                   />
                 </View>
                 <Text style={[styles.modalBadgeName, { color: colors.text }]}>

@@ -1,4 +1,5 @@
-import { LogBox, YellowBox } from 'react-native';
+/* eslint-disable no-console */
+import { LogBox } from 'react-native';
 
 // Ignore les warnings spécifiques de React Navigation
 // C'est un bug connu qui n'affecte pas le fonctionnement
@@ -6,15 +7,8 @@ LogBox.ignoreLogs([
   "TypeError: Cannot read property 'medium' of undefined",
   "Cannot read properties of undefined (reading 'medium')",
   "Warning: TypeError: Cannot read property 'medium' of undefined",
-  "Warning: TypeError:",
+  'Warning: TypeError:',
 ]);
-
-// Désactive complètement YellowBox si disponible
-if (YellowBox) {
-  YellowBox.ignoreWarnings([
-    "TypeError: Cannot read property 'medium' of undefined",
-  ]);
-}
 
 // Patch plus agressif pour supprimer complètement ces warnings
 const originalError = console.error;
@@ -24,9 +18,11 @@ const originalLog = console.log;
 console.error = (...args) => {
   if (args[0] && typeof args[0] === 'string') {
     const message = args[0].toString();
-    if (message.includes("medium") || 
-        message.includes("TypeError") ||
-        message.includes("Cannot read property")) {
+    if (
+      message.includes('medium') ||
+      message.includes('TypeError') ||
+      message.includes('Cannot read property')
+    ) {
       return;
     }
   }
@@ -36,9 +32,11 @@ console.error = (...args) => {
 console.warn = (...args) => {
   if (args[0] && typeof args[0] === 'string') {
     const message = args[0].toString();
-    if (message.includes("medium") || 
-        message.includes("TypeError") ||
-        message.includes("Cannot read property")) {
+    if (
+      message.includes('medium') ||
+      message.includes('TypeError') ||
+      message.includes('Cannot read property')
+    ) {
       return;
     }
   }
@@ -48,8 +46,10 @@ console.warn = (...args) => {
 console.log = (...args) => {
   if (args[0] && typeof args[0] === 'string') {
     const message = args[0].toString();
-    if (message.includes("Warning: TypeError") ||
-        message.includes("Cannot read property 'medium'")) {
+    if (
+      message.includes('Warning: TypeError') ||
+      message.includes("Cannot read property 'medium'")
+    ) {
       return;
     }
   }

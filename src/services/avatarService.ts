@@ -14,11 +14,11 @@ class AvatarService {
     try {
       // Demander les permissions
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (permissionResult.status !== 'granted') {
         Alert.alert(
           'Permission requise',
-          'L\'application a besoin d\'accéder à vos photos pour changer votre avatar.'
+          "L'application a besoin d'accéder à vos photos pour changer votre avatar."
         );
         return { success: false, uri: null };
       }
@@ -45,7 +45,7 @@ class AvatarService {
       );
 
       if (!manipulatedImage.base64) {
-        throw new Error('Erreur lors de la conversion de l\'image');
+        throw new Error("Erreur lors de la conversion de l'image");
       }
 
       // Sauvegarder en base64 dans AsyncStorage
@@ -54,7 +54,7 @@ class AvatarService {
 
       return { success: true, uri: base64Image };
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde de l\'avatar:', error);
+      console.error("Erreur lors de la sauvegarde de l'avatar:", error);
       return { success: false, uri: null };
     }
   }
@@ -67,7 +67,7 @@ class AvatarService {
       const avatar = await AsyncStorage.getItem(`${this.AVATAR_KEY}${userId}`);
       return avatar;
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'avatar:', error);
+      console.error("Erreur lors de la récupération de l'avatar:", error);
       return null;
     }
   }
@@ -80,7 +80,7 @@ class AvatarService {
       await AsyncStorage.removeItem(`${this.AVATAR_KEY}${userId}`);
       return true;
     } catch (error) {
-      console.error('Erreur lors de la suppression de l\'avatar:', error);
+      console.error("Erreur lors de la suppression de l'avatar:", error);
       return false;
     }
   }
@@ -92,11 +92,11 @@ class AvatarService {
     try {
       // Demander les permissions caméra
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-      
+
       if (permissionResult.status !== 'granted') {
         Alert.alert(
           'Permission requise',
-          'L\'application a besoin d\'accéder à votre caméra pour prendre une photo.'
+          "L'application a besoin d'accéder à votre caméra pour prendre une photo."
         );
         return { success: false, uri: null };
       }
@@ -122,7 +122,7 @@ class AvatarService {
       );
 
       if (!manipulatedImage.base64) {
-        throw new Error('Erreur lors de la conversion de l\'image');
+        throw new Error("Erreur lors de la conversion de l'image");
       }
 
       // Sauvegarder
@@ -142,13 +142,15 @@ class AvatarService {
   async getAvatarSize(userId: string): Promise<number> {
     try {
       const avatar = await AsyncStorage.getItem(`${this.AVATAR_KEY}${userId}`);
-      if (!avatar) return 0;
-      
+      if (!avatar) {
+        return 0;
+      }
+
       // Estimation : base64 augmente la taille de ~33%
       const sizeInBytes = avatar.length * 0.75;
       const sizeInKB = sizeInBytes / 1024;
       return Math.round(sizeInKB);
-    } catch (error) {
+    } catch {
       return 0;
     }
   }

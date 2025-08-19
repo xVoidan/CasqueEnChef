@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
+import React, {
+  /* eslint-disable @typescript-eslint/no-misused-promises, react-native/no-inline-styles, react-native/no-color-literals */ useState,
+} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
@@ -47,45 +49,41 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'SignUp'>> = ({ navig
     try {
       await signUp(email, password, username);
       Alert.alert(
-        'Inscription réussie', 
+        'Inscription réussie',
         'Un email de confirmation vous a été envoyé. Veuillez vérifier votre boîte mail.',
         [{ text: 'OK', onPress: () => navigation.navigate('SignIn') }]
       );
-    } catch (err: any) {
-      Alert.alert('Erreur d\'inscription', err.message);
+    } catch (err) {
+      Alert.alert(
+        "Erreur d'inscription",
+        err instanceof Error ? err.message : 'Une erreur est survenue'
+      );
     }
   };
 
   React.useEffect(() => {
     if (error) {
-      Alert.alert('Erreur', error.message, [
-        { text: 'OK', onPress: clearError }
-      ]);
+      Alert.alert('Erreur', error.message, [{ text: 'OK', onPress: clearError }]);
     }
-  }, [error]);
+  }, [error, clearError]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>
-              Créer un compte
-            </Text>
+            <Text style={[styles.title, { color: colors.text }]}>Créer un compte</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Rejoignez la communauté CasqueEnMain
             </Text>
@@ -93,10 +91,13 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'SignUp'>> = ({ navig
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.text }]}>
-                Pseudo *
-              </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.label, { color: colors.text }]}>Pseudo *</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
                 <Ionicons name="person-outline" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -111,10 +112,13 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'SignUp'>> = ({ navig
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.text }]}>
-                Email *
-              </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.label, { color: colors.text }]}>Email *</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
                 <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -130,10 +134,13 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'SignUp'>> = ({ navig
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.text }]}>
-                Mot de passe *
-              </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.label, { color: colors.text }]}>Mot de passe *</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
                 <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -145,10 +152,10 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'SignUp'>> = ({ navig
                   editable={!loading}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} disabled={loading}>
-                  <Ionicons 
-                    name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                    size={20} 
-                    color={colors.textSecondary} 
+                  <Ionicons
+                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={20}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -158,7 +165,12 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'SignUp'>> = ({ navig
               <Text style={[styles.label, { color: colors.text }]}>
                 Confirmer le mot de passe *
               </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
                 <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -169,18 +181,24 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'SignUp'>> = ({ navig
                   secureTextEntry={!showConfirmPassword}
                   editable={!loading}
                 />
-                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} disabled={loading}>
-                  <Ionicons 
-                    name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
-                    size={20} 
-                    color={colors.textSecondary} 
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  disabled={loading}
+                >
+                  <Ionicons
+                    name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={20}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
             </View>
 
-            <TouchableOpacity 
-              style={[styles.signUpButton, { backgroundColor: colors.primary, opacity: loading ? 0.7 : 1 }]}
+            <TouchableOpacity
+              style={[
+                styles.signUpButton,
+                { backgroundColor: colors.primary, opacity: loading ? 0.7 : 1 },
+              ]}
               activeOpacity={0.8}
               onPress={handleSignUp}
               disabled={loading}
@@ -188,14 +206,13 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'SignUp'>> = ({ navig
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.signUpButtonText}>
-                  S'inscrire
-                </Text>
+                <Text style={styles.signUpButtonText}>S'inscrire</Text>
               )}
             </TouchableOpacity>
 
             <Text style={[styles.termsText, { color: colors.textSecondary }]}>
-              En vous inscrivant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité
+              En vous inscrivant, vous acceptez nos conditions d'utilisation et notre politique de
+              confidentialité
             </Text>
           </View>
 
@@ -203,13 +220,8 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'SignUp'>> = ({ navig
             <Text style={[styles.footerText, { color: colors.textSecondary }]}>
               Déjà un compte ?
             </Text>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('SignIn')}
-              disabled={loading}
-            >
-              <Text style={[styles.signInLink, { color: colors.primary }]}>
-                Se connecter
-              </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignIn')} disabled={loading}>
+              <Text style={[styles.signInLink, { color: colors.primary }]}>Se connecter</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

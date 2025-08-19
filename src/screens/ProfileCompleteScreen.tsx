@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, {
+  /* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/no-misused-promises */ useState,
+  useEffect,
+} from 'react';
 import {
   View,
   Text,
@@ -18,62 +21,73 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { spacing, typography, borderRadius, shadows } from '../styles/theme';
+import { spacing, typography, borderRadius } from '../styles/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../constants/styleConstants';
 import { profileService } from '../services/profileService';
 import { avatarService } from '../services/avatarService';
 import * as Haptics from 'expo-haptics';
 
-
 export const ProfileCompleteScreen: React.FC = () => {
-  const { colors, isDark, setThemeMode, themeMode } = useTheme();
+  const { colors, isDark, setThemeMode } = useTheme();
   const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<{
+    nom_complet?: string;
+    email?: string;
+    numero_permis?: string;
+    date_naissance?: string;
+    objectif_temps?: string;
+    objectif_reussite?: number;
+  } | null>(null);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
-  
+
   // Modals states
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [editField, setEditField] = useState<'username' | 'email' | null>(null);
-  
+
   // Form states
   const [newUsername, setNewUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
+  const [_currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     if (user) {
-      loadProfileData();
-      loadAvatar();
+      void loadProfileData();
+      void loadAvatar();
     }
   }, [user]);
 
   const toggleTheme = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Toggle between light and dark (not auto)
     setThemeMode(isDark ? 'light' : 'dark');
   };
 
   const loadAvatar = async () => {
-    if (!user) return;
-    
+    if (!user) {
+      return;
+    }
+
     try {
       const avatar = await avatarService.getAvatar(user.id);
       if (avatar) {
         setAvatarUri(avatar);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement de l\'avatar:', error);
+      console.error("Erreur lors du chargement de l'avatar:", error);
     }
   };
 
   const loadProfileData = async () => {
-    if (!user || user.isGuest) return;
-    
+    if (!user || user.isGuest) {
+      return;
+    }
+
     setLoading(true);
     try {
       // Charger le profil
@@ -83,7 +97,6 @@ export const ProfileCompleteScreen: React.FC = () => {
         setNewUsername(profileData.username || '');
         setNewEmail(user.email || '');
       }
-
     } catch (error) {
       console.error('Erreur lors du chargement du profil:', error);
     } finally {
@@ -100,57 +113,55 @@ export const ProfileCompleteScreen: React.FC = () => {
 
   const handleAvatarChange = async () => {
     if (user?.isGuest) {
-      Alert.alert('Mode invité', 'Cette fonctionnalité n\'est pas disponible en mode invité');
+      Alert.alert('Mode invité', "Cette fonctionnalité n'est pas disponible en mode invité");
       return;
     }
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
-    Alert.alert(
-      'Changer l\'avatar',
-      'Comment souhaitez-vous changer votre avatar ?',
-      [
-        {
-          text: 'Prendre une photo',
-          onPress: async () => {
-            const result = await avatarService.takePhotoForAvatar(user!.id);
-            if (result.success && result.uri) {
-              setAvatarUri(result.uri);
-              Alert.alert('Succès', 'Avatar mis à jour avec succès');
-            }
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    Alert.alert("Changer l'avatar", 'Comment souhaitez-vous changer votre avatar ?', [
+      {
+        text: 'Prendre une photo',
+        onPress: async () => {
+          const result = await avatarService.takePhotoForAvatar(user!.id);
+          if (result.success && result.uri) {
+            setAvatarUri(result.uri);
+            Alert.alert('Succès', 'Avatar mis à jour avec succès');
           }
         },
-        {
-          text: 'Choisir de la galerie',
-          onPress: async () => {
-            const result = await avatarService.selectAndSaveAvatar(user!.id);
-            if (result.success && result.uri) {
-              setAvatarUri(result.uri);
-              Alert.alert('Succès', 'Avatar mis à jour avec succès');
-            }
+      },
+      {
+        text: 'Choisir de la galerie',
+        onPress: async () => {
+          const result = await avatarService.selectAndSaveAvatar(user!.id);
+          if (result.success && result.uri) {
+            setAvatarUri(result.uri);
+            Alert.alert('Succès', 'Avatar mis à jour avec succès');
           }
         },
-        {
-          text: 'Annuler',
-          style: 'cancel'
-        }
-      ]
-    );
+      },
+      {
+        text: 'Annuler',
+        style: 'cancel',
+      },
+    ]);
   };
 
   const handleEditProfile = (field: 'username' | 'email') => {
     if (user?.isGuest) {
-      Alert.alert('Mode invité', 'Cette fonctionnalité n\'est pas disponible en mode invité');
+      Alert.alert('Mode invité', "Cette fonctionnalité n'est pas disponible en mode invité");
       return;
     }
-    
+
     setEditField(field);
     setEditModalVisible(true);
   };
 
   const handleSaveProfile = async () => {
-    if (!user || user.isGuest) return;
-    
+    if (!user || user.isGuest) {
+      return;
+    }
+
     setLoading(true);
     try {
       if (editField === 'username') {
@@ -172,7 +183,7 @@ export const ProfileCompleteScreen: React.FC = () => {
         }
       }
       setEditModalVisible(false);
-    } catch (error: any) {
+    } catch (error: Error) {
       Alert.alert('Erreur', error.message);
     } finally {
       setLoading(false);
@@ -184,17 +195,17 @@ export const ProfileCompleteScreen: React.FC = () => {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs');
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
       return;
     }
-    
+
     if (newPassword.length < 6) {
       Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
-    
+
     setLoading(true);
     try {
       const { error } = await profileService.updatePassword(newPassword);
@@ -207,7 +218,7 @@ export const ProfileCompleteScreen: React.FC = () => {
         setConfirmPassword('');
         setCurrentPassword('');
       }
-    } catch (error: any) {
+    } catch (error: Error) {
       Alert.alert('Erreur', error.message);
     } finally {
       setLoading(false);
@@ -215,27 +226,24 @@ export const ProfileCompleteScreen: React.FC = () => {
   };
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Déconnexion',
-          style: 'destructive',
-          onPress: async () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            await signOut();
-          },
+    Alert.alert('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Déconnexion',
+        style: 'destructive',
+        onPress: async () => {
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          await signOut();
         },
-      ]
-    );
+      },
+    ]);
   };
-
 
   if (loading && !profile) {
     return (
-      <View style={[styles.container, styles.centerContent, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.container, styles.centerContent, { backgroundColor: colors.background }]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -245,7 +253,7 @@ export const ProfileCompleteScreen: React.FC = () => {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.scrollContentPadding}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -266,20 +274,18 @@ export const ProfileCompleteScreen: React.FC = () => {
               )}
               {!user?.isGuest && (
                 <View style={[styles.avatarBadge, { backgroundColor: colors.primary }]}>
-                  <Ionicons name="camera" size={16} color="#FFFFFF" />
+                  <Ionicons name="camera" size={16} color={COLORS.white} />
                 </View>
               )}
             </View>
           </TouchableOpacity>
 
           <Text style={[styles.userName, { color: colors.text }]}>
-            {user?.isGuest ? 'Mode Invité' : (profile?.username || user?.email?.split('@')[0])}
+            {user?.isGuest ? 'Mode Invité' : profile?.username || user?.email?.split('@')[0]}
           </Text>
-          
+
           {!user?.isGuest && (
-            <Text style={[styles.userEmail, { color: colors.textSecondary }]}>
-              {user?.email}
-            </Text>
+            <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{user?.email}</Text>
           )}
 
           {profile?.concours_type && (
@@ -291,11 +297,10 @@ export const ProfileCompleteScreen: React.FC = () => {
           )}
         </View>
 
-
         {/* Informations du profil */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Informations</Text>
-          
+
           <TouchableOpacity
             style={[styles.infoRow, { backgroundColor: colors.surface }]}
             onPress={() => handleEditProfile('username')}
@@ -306,7 +311,7 @@ export const ProfileCompleteScreen: React.FC = () => {
               <View style={styles.infoText}>
                 <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Pseudo</Text>
                 <Text style={[styles.infoValue, { color: colors.text }]}>
-                  {user?.isGuest ? 'Mode invité' : (profile?.username || '-')}
+                  {user?.isGuest ? 'Mode invité' : profile?.username || '-'}
                 </Text>
               </View>
             </View>
@@ -342,7 +347,9 @@ export const ProfileCompleteScreen: React.FC = () => {
               <View style={styles.infoContent}>
                 <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
                 <View style={styles.infoText}>
-                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Mot de passe</Text>
+                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                    Mot de passe
+                  </Text>
                   <Text style={[styles.infoValue, { color: colors.text }]}>••••••••</Text>
                 </View>
               </View>
@@ -354,22 +361,16 @@ export const ProfileCompleteScreen: React.FC = () => {
         {/* Préférences */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Préférences</Text>
-          
+
           <View style={[styles.preferenceRow, { backgroundColor: colors.surface }]}>
             <TouchableOpacity
               style={styles.preferenceContent}
               onPress={toggleTheme}
               activeOpacity={0.7}
             >
-              <Ionicons 
-                name={isDark ? 'moon' : 'sunny'} 
-                size={22} 
-                color={colors.primary} 
-              />
+              <Ionicons name={isDark ? 'moon' : 'sunny'} size={22} color={colors.primary} />
               <View style={styles.preferenceText}>
-                <Text style={[styles.preferenceLabel, { color: colors.text }]}>
-                  Mode sombre
-                </Text>
+                <Text style={[styles.preferenceLabel, { color: colors.text }]}>Mode sombre</Text>
                 <Text style={[styles.preferenceValue, { color: colors.textSecondary }]}>
                   {isDark ? 'Activé' : 'Désactivé'}
                 </Text>
@@ -401,7 +402,8 @@ export const ProfileCompleteScreen: React.FC = () => {
             <View style={[styles.guestInfo, { backgroundColor: `${colors.primary}10` }]}>
               <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
               <Text style={[styles.guestInfoText, { color: colors.text }]}>
-                Créez un compte pour sauvegarder votre progression et débloquer toutes les fonctionnalités
+                Créez un compte pour sauvegarder votre progression et débloquer toutes les
+                fonctionnalités
               </Text>
             </View>
           )}
@@ -422,7 +424,7 @@ export const ProfileCompleteScreen: React.FC = () => {
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
-                Modifier {editField === 'username' ? 'le pseudo' : 'l\'email'}
+                Modifier {editField === 'username' ? 'le pseudo' : "l'email"}
               </Text>
               <TouchableOpacity onPress={() => setEditModalVisible(false)}>
                 <Ionicons name="close" size={24} color={colors.text} />
@@ -448,13 +450,13 @@ export const ProfileCompleteScreen: React.FC = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, { backgroundColor: colors.primary }]}
-                onPress={handleSaveProfile}
+                onPress={() => void handleSaveProfile()}
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={COLORS.white} />
                 ) : (
-                  <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]}>Enregistrer</Text>
+                  <Text style={styles.modalButtonText}>Enregistrer</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -514,9 +516,9 @@ export const ProfileCompleteScreen: React.FC = () => {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={COLORS.white} />
                 ) : (
-                  <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]}>Changer</Text>
+                  <Text style={styles.modalButtonText}>Changer</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -579,7 +581,7 @@ const styles = StyleSheet.create({
   },
   concoursText: {
     ...typography.caption,
-    color: '#FFFFFF',
+    color: COLORS.white,
     fontWeight: '600',
   },
   section: {
@@ -640,7 +642,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: COLORS.overlay,
   },
   modalContent: {
     borderTopLeftRadius: borderRadius.xl,
@@ -676,6 +678,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     ...typography.bodyBold,
+    color: COLORS.white,
   },
   preferenceRow: {
     flexDirection: 'row',
@@ -700,5 +703,8 @@ const styles = StyleSheet.create({
   },
   preferenceValue: {
     ...typography.small,
+  },
+  scrollContentPadding: {
+    paddingBottom: 100,
   },
 });

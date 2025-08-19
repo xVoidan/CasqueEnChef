@@ -1,40 +1,39 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, {
+  /* eslint-disable react-native/no-inline-styles, react-native/no-color-literals */ useEffect,
+  useState,
+  useRef as _useRef,
+  useCallback,
+} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
+  SafeAreaView,
   Share,
-  Platform,
+  Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../contexts/ThemeContext';
-import { useAuth } from '../contexts/AuthContext';
-import { spacing, typography, borderRadius, shadows } from '../styles/theme';
-import { Ionicons } from '@expo/vector-icons';
-import { ButtonContainer } from '../components/ButtonContainer';
 import Animated, {
   FadeInDown,
-  FadeInUp,
-  ZoomIn,
-  BounceIn,
-  SlideInRight,
-  useAnimatedStyle,
   useSharedValue,
+  useAnimatedStyle,
   withSpring,
+  withTiming,
   withDelay,
   withSequence,
-  withTiming,
   interpolate,
-  Extrapolate,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { shadows, typography, spacing, borderRadius } from '../styles/theme';
+import { COLORS } from '../constants/styleConstants';
 import { TrainingStackScreenProps } from '../types/navigation';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: _SCREEN_WIDTH } = Dimensions.get('window');
 
 interface SessionStats {
   sessionId: number;
@@ -78,38 +77,51 @@ interface FailedQuestion {
   explication: string;
 }
 
-export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionReport'>> = ({ 
-  navigation, 
-  route 
+export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionReport'>> = ({
+  navigation,
+  route,
 }) => {
   const { colors } = useTheme();
-  const { user } = useAuth();
-  const [stats, setStats] = useState<SessionStats | null>(route.params?.stats || null);
-  const [loading, setLoading] = useState(false);
+  const { user: _user } = useAuth();
+  const [stats, _setStats] = useState<SessionStats | null>(route.params?.stats ?? null);
+  const [loading, _setLoading] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<number | null>(null);
-  const isAbandoned = route.params?.isAbandoned || false;
-  
+  const isAbandoned = route.params?.isAbandoned ?? false;
+
   const celebrationScale = useSharedValue(1); // Initialiser à 1 pour être visible
   const starScale = useSharedValue(1); // Initialiser à 1 pour être visible
   const progressAnimation = useSharedValue(0);
+
+  const triggerCelebration = useCallback(() => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    celebrationScale.value = withSequence(withSpring(1.2), withSpring(1));
+
+    starScale.value = withDelay(200, withSequence(withSpring(1.3), withSpring(1)));
+  }, [celebrationScale, starScale]);
+
+  const triggerEncouragement = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    celebrationScale.value = withSequence(withTiming(0.95, { duration: 200 }), withSpring(1));
+
+    starScale.value = withDelay(
+      100,
+      withSequence(withTiming(0.8, { duration: 200 }), withSpring(1))
+    );
+  }, [celebrationScale, starScale]);
 
   useEffect(() => {
     if (stats) {
       // Animation d'entrée depuis 0
       celebrationScale.value = 0;
       starScale.value = 0;
-      
+
       // Puis animer vers 1 avec effet approprié
-      celebrationScale.value = withDelay(
-        200,
-        withSpring(1, { damping: 15, stiffness: 150 })
-      );
-      
-      starScale.value = withDelay(
-        400,
-        withSpring(1, { damping: 15, stiffness: 150 })
-      );
-      
+      celebrationScale.value = withDelay(200, withSpring(1, { damping: 15, stiffness: 150 }));
+
+      starScale.value = withDelay(400, withSpring(1, { damping: 15, stiffness: 150 }));
+
       // Déclencher les animations spécifiques selon le score
       if (stats.successRate >= 80 && !isAbandoned) {
         // Célébration pour les bons scores
@@ -118,61 +130,51 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
         // Animation d'encouragement pour les mauvais scores
         setTimeout(() => triggerEncouragement(), 600);
       }
-      
+
       // Animer la progression
       progressAnimation.value = withDelay(500, withTiming(stats.successRate, { duration: 1500 }));
     }
-  }, [stats]);
+  }, [
+    stats,
+    celebrationScale,
+    starScale,
+    progressAnimation,
+    triggerCelebration,
+    triggerEncouragement,
+    isAbandoned,
+  ]);
 
   // Fonction supprimée car les stats viennent maintenant des params
 
-  const triggerCelebration = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    
-    celebrationScale.value = withSequence(
-      withSpring(1.2),
-      withSpring(1)
-    );
-    
-    starScale.value = withDelay(
-      200,
-      withSequence(
-        withSpring(1.3),
-        withSpring(1)
-      )
-    );
-  };
-  
-  const triggerEncouragement = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
-    celebrationScale.value = withSequence(
-      withTiming(0.95, { duration: 200 }),
-      withSpring(1)
-    );
-    
-    starScale.value = withDelay(
-      100,
-      withSequence(
-        withTiming(0.8, { duration: 200 }),
-        withSpring(1)
-      )
-    );
-  };
-
   const getGradeEmoji = (rate: number) => {
-    if (rate >= 90) return '🏆';
-    if (rate >= 80) return '⭐';
-    if (rate >= 70) return '👍';
-    if (rate >= 60) return '💪';
+    if (rate >= 90) {
+      return '🏆';
+    }
+    if (rate >= 80) {
+      return '⭐';
+    }
+    if (rate >= 70) {
+      return '👍';
+    }
+    if (rate >= 60) {
+      return '💪';
+    }
     return '📚';
   };
 
   const getGradeColor = (rate: number) => {
-    if (rate >= 90) return '#FFD700';
-    if (rate >= 80) return '#10B981';
-    if (rate >= 70) return '#3B82F6';
-    if (rate >= 60) return '#F59E0B';
+    if (rate >= 90) {
+      return '#FFD700';
+    }
+    if (rate >= 80) {
+      return '#10B981';
+    }
+    if (rate >= 70) {
+      return '#3B82F6';
+    }
+    if (rate >= 60) {
+      return '#F59E0B';
+    }
     return '#EF4444';
   };
 
@@ -183,15 +185,18 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
   };
 
   const shareResults = async () => {
-    if (!stats) return;
-    
+    if (!stats) {
+      return;
+    }
+
     try {
-      const message = `🚒 Casque En Main - Résultats de session\n\n` +
+      const message =
+        `🚒 Casque En Main - Résultats de session\n\n` +
         `📊 Score: ${stats.score}/${stats.totalQuestions} (${stats.successRate}%)\n` +
-        `⏱️ Temps: ${formatTime(stats.totalTime || 0)}\n` +
+        `⏱️ Temps: ${formatTime(stats.totalTime ?? 0)}\n` +
         `🏆 Points gagnés: ${stats.pointsEarned}\n\n` +
         `Je m'entraîne pour le concours de Sapeur-Pompier avec Casque En Main !`;
-      
+
       await Share.share({
         message,
         title: 'Mes résultats Casque En Main',
@@ -203,34 +208,26 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 
   const startNewSession = (sameParams: boolean) => {
     if (sameParams) {
-      navigation.replace('TrainingSession', route.params?.sessionParams || {});
+      navigation.replace('TrainingSession', route.params?.sessionParams ?? {});
     } else {
-      navigation.navigate('TrainingConfig');
+      void navigation.navigate('TrainingConfig');
     }
   };
 
   const reviewFailedQuestions = () => {
     if (stats?.failedQuestions) {
-      navigation.navigate('ReviewQuestions', { questions: stats.failedQuestions });
+      void navigation.navigate('ReviewQuestions', { questions: stats.failedQuestions });
     }
   };
 
   const celebrationAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: celebrationScale.value }],
-    opacity: interpolate(
-      celebrationScale.value,
-      [0, 0.5, 1],
-      [0, 0.8, 1]
-    ),
+    opacity: interpolate(celebrationScale.value, [0, 0.5, 1], [0, 0.8, 1]),
   }));
 
   const starAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: starScale.value }],
-    opacity: interpolate(
-      starScale.value,
-      [0, 0.5, 1],
-      [0, 0.8, 1]
-    ),
+    opacity: interpolate(starScale.value, [0, 0.5, 1], [0, 0.8, 1]),
   }));
 
   const progressBarStyle = useAnimatedStyle(() => ({
@@ -249,7 +246,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
     );
   }
 
-  const isGoodScore = stats.successRate >= 70;
+  const _isGoodScore = stats.successRate >= 70;
   const gradeColor = getGradeColor(stats.successRate);
   const displayScore = Math.max(0, stats.score); // Éviter l'affichage de scores négatifs
 
@@ -257,14 +254,9 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header avec score principal */}
-        <Animated.View 
-          entering={FadeInDown.duration(600).delay(200)}
-          style={styles.header}
-        >
+        <Animated.View entering={FadeInDown.duration(600).delay(200)} style={styles.header}>
           <LinearGradient
-            colors={isAbandoned 
-              ? ['#F59E0B', '#F59E0BCC'] 
-              : [gradeColor, `${gradeColor}CC`]} // Toujours utiliser la couleur appropriée au score
+            colors={isAbandoned ? ['#F59E0B', '#F59E0BCC'] : [gradeColor, `${gradeColor}CC`]} // Toujours utiliser la couleur appropriée au score
             style={styles.scoreCard}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -282,7 +274,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
                 </Animated.Text>
               </View>
               <Text style={styles.scoreNote}>
-                Note: {(stats.successRate * 20 / 100).toFixed(1)}/20
+                Note: {((stats.successRate * 20) / 100).toFixed(1)}/20
               </Text>
             </Animated.View>
           </LinearGradient>
@@ -290,11 +282,11 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 
         {/* Message pour session abandonnée */}
         {isAbandoned && (
-          <Animated.View 
+          <Animated.View
             entering={FadeInUp.duration(500).delay(300)}
             style={[styles.abandonedCard, { backgroundColor: '#F59E0B15' }]}
           >
-            <Ionicons name="information-circle" size={24} color="#F59E0B" />
+            <Ionicons name="information-circle" size={24} color={COLORS.warning} />
             <Text style={[styles.abandonedText, { color: colors.text }]}>
               Session interrompue avant la fin. Vos résultats partiels sont enregistrés.
             </Text>
@@ -302,23 +294,19 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
         )}
 
         {/* Statistiques principales */}
-        <Animated.View 
+        <Animated.View
           entering={FadeInUp.duration(600).delay(400)}
           style={[styles.statsCard, { backgroundColor: colors.surface }, shadows.sm]}
         >
           <Text style={[styles.statsTitle, { color: colors.text }]}>
             {isAbandoned ? 'Performance Partielle' : 'Performance'}
           </Text>
-          
+
           {/* Barre de progression */}
           <View style={styles.progressContainer}>
             <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
-              <Animated.View 
-                style={[
-                  styles.progressFill,
-                  { backgroundColor: gradeColor },
-                  progressBarStyle
-                ]}
+              <Animated.View
+                style={[styles.progressFill, { backgroundColor: gradeColor }, progressBarStyle]}
               />
             </View>
             <Text style={[styles.progressText, { color: colors.text }]}>
@@ -328,53 +316,41 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 
           {/* Stats en grille */}
           <View style={styles.statsGrid}>
-            <Animated.View 
-              entering={SlideInRight.duration(500).delay(600)}
-              style={styles.statItem}
-            >
-              <Ionicons name="checkmark-circle" size={24} color="#10B981" />
-              <Text style={[styles.statValue, { color: colors.text }]}>
-                {stats.correctAnswers}
-              </Text>
+            <Animated.View entering={SlideInRight.duration(500).delay(600)} style={styles.statItem}>
+              <Ionicons name="checkmark-circle" size={24} color={COLORS.success} />
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats.correctAnswers}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
                 Bonnes réponses
               </Text>
             </Animated.View>
 
-            <Animated.View 
-              entering={SlideInRight.duration(500).delay(700)}
-              style={styles.statItem}
-            >
-              <Ionicons name="close-circle" size={24} color="#EF4444" />
+            <Animated.View entering={SlideInRight.duration(500).delay(700)} style={styles.statItem}>
+              <Ionicons name="close-circle" size={24} color={COLORS.error} />
               <Text style={[styles.statValue, { color: colors.text }]}>
                 {stats.totalQuestions - stats.correctAnswers}
               </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                Erreurs
-              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Erreurs</Text>
             </Animated.View>
 
             {stats.totalTime && (
-              <Animated.View 
+              <Animated.View
                 entering={SlideInRight.duration(500).delay(800)}
                 style={styles.statItem}
               >
-                <Ionicons name="time" size={24} color="#3B82F6" />
+                <Ionicons name="time" size={24} color={COLORS.info} />
                 <Text style={[styles.statValue, { color: colors.text }]}>
                   {formatTime(stats.totalTime)}
                 </Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                  Temps total
-                </Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Temps total</Text>
               </Animated.View>
             )}
 
             {stats.averageTime && (
-              <Animated.View 
+              <Animated.View
                 entering={SlideInRight.duration(500).delay(900)}
                 style={styles.statItem}
               >
-                <Ionicons name="speedometer" size={24} color="#F59E0B" />
+                <Ionicons name="speedometer" size={24} color={COLORS.warning} />
                 <Text style={[styles.statValue, { color: colors.text }]}>
                   {formatTime(stats.averageTime)}
                 </Text>
@@ -386,7 +362,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
           </View>
 
           {/* Points gagnés */}
-          <Animated.View 
+          <Animated.View
             entering={BounceIn.duration(800).delay(1000)}
             style={[styles.pointsCard, { backgroundColor: `${colors.primary}15` }]}
           >
@@ -403,37 +379,27 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
         </Animated.View>
 
         {/* Répartition par thème */}
-        <Animated.View 
+        <Animated.View
           entering={FadeInUp.duration(600).delay(1200)}
           style={[styles.themeCard, { backgroundColor: colors.surface }, shadows.sm]}
         >
-          <Text style={[styles.themeTitle, { color: colors.text }]}>
-            Répartition par thème
-          </Text>
+          <Text style={[styles.themeTitle, { color: colors.text }]}>Répartition par thème</Text>
 
           {stats.themeStats.map((theme, index) => (
             <TouchableOpacity
               key={theme.themeId}
-              onPress={() => setSelectedTheme(
-                selectedTheme === theme.themeId ? null : theme.themeId
-              )}
+              onPress={() =>
+                setSelectedTheme(selectedTheme === theme.themeId ? null : theme.themeId)
+              }
               activeOpacity={0.7}
             >
-              <Animated.View 
+              <Animated.View
                 entering={SlideInRight.duration(500).delay(1300 + index * 100)}
-                style={[
-                  styles.themeItem,
-                  { backgroundColor: `${theme.themeColor}10` }
-                ]}
+                style={[styles.themeItem, { backgroundColor: `${theme.themeColor}10` }]}
               >
                 <View style={styles.themeHeader}>
                   <View style={styles.themeInfo}>
-                    <View 
-                      style={[
-                        styles.themeColorDot, 
-                        { backgroundColor: theme.themeColor }
-                      ]} 
-                    />
+                    <View style={[styles.themeColorDot, { backgroundColor: theme.themeColor }]} />
                     <Text style={[styles.themeName, { color: colors.text }]}>
                       {theme.themeName}
                     </Text>
@@ -445,21 +411,21 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
                     <Text style={[styles.themeRate, { color: theme.themeColor }]}>
                       {theme.successRate.toFixed(0)}%
                     </Text>
-                    <Ionicons 
-                      name={selectedTheme === theme.themeId ? "chevron-up" : "chevron-down"} 
-                      size={20} 
-                      color={colors.textSecondary} 
+                    <Ionicons
+                      name={selectedTheme === theme.themeId ? 'chevron-up' : 'chevron-down'}
+                      size={20}
+                      color={colors.textSecondary}
                     />
                   </View>
                 </View>
 
                 {/* Sous-thèmes détaillés */}
                 {selectedTheme === theme.themeId && (
-                  <Animated.View 
+                  <Animated.View
                     entering={FadeInDown.duration(300)}
                     style={styles.sousThemeContainer}
                   >
-                    {theme.sousThemes.map((sousTheme) => (
+                    {theme.sousThemes.map(sousTheme => (
                       <View key={sousTheme.sousThemeId} style={styles.sousThemeItem}>
                         <Text style={[styles.sousThemeName, { color: colors.textSecondary }]}>
                           {sousTheme.sousThemeName}
@@ -468,10 +434,12 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
                           <Text style={[styles.sousThemeScore, { color: colors.text }]}>
                             {sousTheme.correctAnswers}/{sousTheme.totalQuestions}
                           </Text>
-                          <Text style={[
-                            styles.sousThemeRate, 
-                            { color: sousTheme.successRate >= 70 ? '#10B981' : '#F59E0B' }
-                          ]}>
+                          <Text
+                            style={[
+                              styles.sousThemeRate,
+                              { color: sousTheme.successRate >= 70 ? '#10B981' : '#F59E0B' },
+                            ]}
+                          >
                             {sousTheme.successRate.toFixed(0)}%
                           </Text>
                         </View>
@@ -486,82 +454,77 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 
         {/* Questions échouées */}
         {stats.failedQuestions.length > 0 && (
-          <Animated.View 
+          <Animated.View
             entering={FadeInUp.duration(600).delay(1600)}
             style={[styles.failedCard, { backgroundColor: colors.surface }, shadows.sm]}
           >
             <View style={styles.failedHeader}>
-              <Text style={[styles.failedTitle, { color: colors.text }]}>
-                Questions à réviser
-              </Text>
+              <Text style={[styles.failedTitle, { color: colors.text }]}>Questions à réviser</Text>
               <TouchableOpacity
                 onPress={reviewFailedQuestions}
                 style={[styles.reviewButton, { backgroundColor: colors.primary }]}
               >
                 <Text style={styles.reviewButtonText}>Réviser</Text>
-                <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                <Ionicons name="arrow-forward" size={16} color={COLORS.white} />
               </TouchableOpacity>
             </View>
-            
+
             <Text style={[styles.failedCount, { color: colors.textSecondary }]}>
-              {stats.failedQuestions.length} question{stats.failedQuestions.length > 1 ? 's' : ''} à revoir
+              {stats.failedQuestions.length} question{stats.failedQuestions.length > 1 ? 's' : ''} à
+              revoir
             </Text>
           </Animated.View>
         )}
 
         {/* Actions */}
-        <ButtonContainer 
-          backgroundColor={colors.background} 
+        <ButtonContainer
+          backgroundColor={colors.background}
           borderColor="transparent"
           hasBorder={false}
           style={{ backgroundColor: 'transparent' }}
         >
-          <Animated.View 
-            entering={FadeInUp.duration(600).delay(1800)}
-          >
+          <Animated.View entering={FadeInUp.duration(600).delay(1800)}>
             <TouchableOpacity
               onPress={() => startNewSession(true)}
               style={[styles.primaryButton, { backgroundColor: colors.primary }]}
               activeOpacity={0.8}
             >
-            <Ionicons name="refresh" size={2} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>Nouvelle session</Text>
-            <Text style={styles.primaryButtonSubtext}>Mêmes paramètres</Text>
-          </TouchableOpacity>
-
-          <View style={styles.secondaryActions}>
-            <TouchableOpacity
-              onPress={() => startNewSession(false)}
-              style={[styles.secondaryButton, { backgroundColor: colors.surface}, shadows.sm]}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="settings" size={32} color={colors.primary} />
-              <Text style={[styles.secondaryButtonText, { color: colors.text}]}>
-              Nouveaux paramètres
-              </Text>
+              <Ionicons name="refresh" size={2} color="#FFFFFF" />
+              <Text style={styles.primaryButtonText}>Nouvelle session</Text>
+              <Text style={styles.primaryButtonSubtext}>Mêmes paramètres</Text>
             </TouchableOpacity>
 
+            <View style={styles.secondaryActions}>
+              <TouchableOpacity
+                onPress={() => startNewSession(false)}
+                style={[styles.secondaryButton, { backgroundColor: colors.surface }, shadows.sm]}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="settings" size={32} color={colors.primary} />
+                <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
+                  Nouveaux paramètres
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={shareResults}
+                style={[styles.secondaryButton, { backgroundColor: colors.surface }, shadows.sm]}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="share-social" size={32} color={colors.primary} />
+                <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Partager</Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
-              onPress={shareResults}
-              style={[styles.secondaryButton, { backgroundColor: colors.surface }, shadows.sm]}
+              onPress={() => void navigation.navigate('HomeScreen')}
+              style={styles.homeButton}
               activeOpacity={0.7}
             >
-              <Ionicons name="share-social" size={32} color={colors.primary} />
-              <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
-                Partager
+              <Text style={[styles.homeButtonText, { color: colors.textSecondary }]}>
+                Retour à l'accueil
               </Text>
             </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('HomeScreen')}
-            style={styles.homeButton}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.homeButtonText, { color: colors.textSecondary }]}>
-              Retour à l'accueil
-            </Text>
-          </TouchableOpacity>
           </Animated.View>
         </ButtonContainer>
       </ScrollView>

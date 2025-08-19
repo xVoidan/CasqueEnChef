@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
+import React, { /* eslint-disable react-native/no-color-literals */ useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
@@ -15,7 +15,9 @@ import { spacing, typography, borderRadius } from '../styles/theme';
 import { AuthStackScreenProps } from '../types/navigation';
 import { Ionicons } from '@expo/vector-icons';
 
-export const AuthScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigation }) => {
+export const AuthScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({
+  navigation: _navigation,
+}) => {
   const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,11 +25,11 @@ export const AuthScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigatio
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -36,9 +38,7 @@ export const AuthScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigatio
             <View style={[styles.logo, { backgroundColor: colors.primary }]}>
               <Ionicons name="shield-checkmark" size={48} color="#FFFFFF" />
             </View>
-            <Text style={[styles.appName, { color: colors.text }]}>
-              CasqueEnMain
-            </Text>
+            <Text style={[styles.appName, { color: colors.text }]}>CasqueEnMain</Text>
             <Text style={[styles.tagline, { color: colors.textSecondary }]}>
               Votre compagnon de formation
             </Text>
@@ -46,10 +46,13 @@ export const AuthScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigatio
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.text }]}>
-                Email
-              </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
                 <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -64,10 +67,13 @@ export const AuthScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigatio
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.text }]}>
-                Mot de passe
-              </Text>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.label, { color: colors.text }]}>Mot de passe</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
                 <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -78,10 +84,10 @@ export const AuthScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigatio
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons 
-                    name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                    size={20} 
-                    color={colors.textSecondary} 
+                  <Ionicons
+                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={20}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -93,25 +99,24 @@ export const AuthScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigatio
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.signInButton, { backgroundColor: colors.primary }]}
               activeOpacity={0.8}
             >
-              <Text style={styles.signInButtonText}>
-                Se connecter
-              </Text>
+              <Text style={styles.signInButtonText}>Se connecter</Text>
             </TouchableOpacity>
 
             <View style={styles.dividerContainer}>
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
-              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>
-                OU
-              </Text>
+              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>OU</Text>
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
             </View>
 
-            <TouchableOpacity 
-              style={[styles.secondaryButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            <TouchableOpacity
+              style={[
+                styles.secondaryButton,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
               activeOpacity={0.8}
             >
               <Ionicons name="finger-print" size={20} color={colors.primary} />
@@ -126,9 +131,7 @@ export const AuthScreen: React.FC<AuthStackScreenProps<'SignIn'>> = ({ navigatio
               Pas encore de compte ?
             </Text>
             <TouchableOpacity>
-              <Text style={[styles.signUpLink, { color: colors.primary }]}>
-                S'inscrire
-              </Text>
+              <Text style={[styles.signUpLink, { color: colors.primary }]}>S'inscrire</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

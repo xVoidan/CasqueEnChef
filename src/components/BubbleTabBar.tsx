@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -12,6 +12,9 @@ import Animated, {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { shadows } from '../styles/theme';
+
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-native/no-color-literals */
 
 const { width } = Dimensions.get('window');
 const TAB_BAR_WIDTH = width - 40;
@@ -27,7 +30,7 @@ const BubbleTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
       damping: 15,
       stiffness: 100,
     });
-  }, [state.index]);
+  }, [state.index, translateX]);
 
   const animatedBubbleStyle = useAnimatedStyle(() => {
     return {
@@ -67,23 +70,21 @@ const BubbleTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <View style={[
-        styles.tabBar, 
-        { 
-          backgroundColor: colors.surface,
-          borderWidth: 1,
-          borderColor: colors.border,
-        },
-        shadows.lg
-      ]}>
-        <Animated.View 
-          style={[
-            styles.bubble,
-            animatedBubbleStyle,
-            { backgroundColor: colors.primary }
-          ]} 
+      <View
+        style={[
+          styles.tabBar,
+          {
+            backgroundColor: colors.surface,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: colors.border,
+          },
+          shadows.lg,
+        ]}
+      >
+        <Animated.View
+          style={[styles.bubble, animatedBubbleStyle, { backgroundColor: colors.primary }]}
         />
-        
+
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
@@ -139,10 +140,16 @@ interface TabIconProps {
   isFocused: boolean;
   iconName: keyof typeof Ionicons.glyphMap;
   label: string;
-  colors: any;
+  colors: {
+    surface: string;
+    border: string;
+    primary: string;
+    text: string;
+    textSecondary: string;
+  };
 }
 
-const TabIcon: React.FC<TabIconProps> = ({ routeName, isFocused, iconName, label, colors }) => {
+const TabIcon: React.FC<TabIconProps> = ({ isFocused, iconName, label, colors }) => {
   const scaleValue = useSharedValue(isFocused ? 1 : 0.9);
   const opacityValue = useSharedValue(isFocused ? 1 : 0.6);
 
@@ -152,7 +159,7 @@ const TabIcon: React.FC<TabIconProps> = ({ routeName, isFocused, iconName, label
       stiffness: 150,
     });
     opacityValue.value = withTiming(isFocused ? 1 : 0.6, { duration: 200 });
-  }, [isFocused]);
+  }, [isFocused, opacityValue, scaleValue]);
 
   const animatedIconStyle = useAnimatedStyle(() => {
     return {
@@ -166,11 +173,7 @@ const TabIcon: React.FC<TabIconProps> = ({ routeName, isFocused, iconName, label
       opacity: opacityValue.value,
       transform: [
         {
-          scale: interpolate(
-            scaleValue.value,
-            [0.9, 1],
-            [0.85, 1]
-          ),
+          scale: interpolate(scaleValue.value, [0.9, 1], [0.85, 1]),
         },
       ],
     };
@@ -179,18 +182,10 @@ const TabIcon: React.FC<TabIconProps> = ({ routeName, isFocused, iconName, label
   return (
     <View style={styles.iconContainer}>
       <Animated.View style={animatedIconStyle}>
-        <Ionicons 
-          name={iconName} 
-          size={24} 
-          color={isFocused ? '#fff' : colors.text} 
-        />
+        <Ionicons name={iconName} size={24} color={isFocused ? '#fff' : colors.text} />
       </Animated.View>
-      <Animated.Text 
-        style={[
-          styles.label,
-          animatedTextStyle,
-          { color: isFocused ? '#fff' : colors.text }
-        ]}
+      <Animated.Text
+        style={[styles.label, animatedTextStyle, { color: isFocused ? '#fff' : colors.text }]}
       >
         {label}
       </Animated.Text>

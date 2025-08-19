@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {
+  /* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/prefer-nullish-coalescing, react-native/no-inline-styles, react-native/no-color-literals */ useState,
+  useEffect,
+  useRef,
+} from 'react';
 import {
   View,
   Text,
@@ -23,11 +27,11 @@ import { ButtonContainer } from '../components/ButtonContainer';
 import * as Haptics from 'expo-haptics';
 import { badgesService } from '../services/badgesService';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: _screenWidth } = Dimensions.get('window');
 
-export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingSession'>> = ({ 
-  navigation, 
-  route 
+export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingSession'>> = ({
+  navigation,
+  route,
 }) => {
   const { colors } = useTheme();
   const { user } = useAuth();
@@ -39,7 +43,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
     mode: 'entrainement_libre' as const,
     showExplanation: true,
     timerEnabled: false,
-    timeLimit: 30
+    timeLimit: 30,
   };
   const { sousThemes = [], settings = defaultSettings } = route.params || {};
 
@@ -55,7 +59,11 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [nextQuestionData, setNextQuestionData] = useState<any>(null);
+  const [nextQuestionData, setNextQuestionData] = useState<{
+    question: Question;
+    answers: string[];
+    correctAnswer: string;
+  } | null>(null);
   const timeSpentRef = useRef(0);
 
   // Animations pour la transition fluide
@@ -70,18 +78,17 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
   useEffect(() => {
-    initializeSession();
+    void initializeSession();
   }, []);
-
 
   const initializeSession = async () => {
     try {
       setLoading(true);
-      
+
       // Vérifier s'il y a une session en pause à reprendre
       if (user) {
         const pausedSession = await sessionService.getLocalSession(user.id);
-        if (pausedSession && pausedSession.isPaused) {
+        if (pausedSession?.isPaused) {
           // Reprendre la session en pause
           setQuestions(pausedSession.questions);
           setCurrentQuestionIndex(pausedSession.currentQuestionIndex);
@@ -92,7 +99,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
           return;
         }
       }
-      
+
       // Sinon, charger de nouvelles questions
       const loadedQuestions = await sessionService.loadQuestions(
         sousThemes || [],
@@ -111,7 +118,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
       if (user) {
         const sessionSettings = {
           ...defaultSettings,
-          ...settings
+          ...settings,
         };
         const session = await sessionService.createSession(
           user.id,
@@ -130,18 +137,20 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
   };
 
   const handleAnswerSelect = (answerId: number) => {
-    if (showCorrection) return;
+    if (showCorrection) {
+      return;
+    }
 
     if (currentQuestion.type_question === 'QCU') {
       setSelectedAnswers([answerId]);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } else {
       // QCM
       setSelectedAnswers(prev => {
         if (prev.includes(answerId)) {
           return prev.filter(id => id !== answerId);
         } else {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           return [...prev, answerId];
         }
       });
@@ -150,11 +159,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
 
   const handleValidate = async () => {
     // Calculer le score
-    const result = sessionService.calculateScore(
-      currentQuestion,
-      selectedAnswers,
-      settings
-    );
+    const result = sessionService.calculateScore(currentQuestion, selectedAnswers, settings);
 
     // Créer la réponse utilisateur
     const userAnswer: UserAnswer = {
@@ -162,7 +167,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
       selectedAnswers,
       isCorrect: result.isCorrect,
       points: result.points,
-      timeSpent: timeSpentRef.current
+      timeSpent: timeSpentRef.current,
     };
 
     // Sauvegarder la réponse
@@ -175,9 +180,9 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
 
     // Feedback haptique
     if (result.isCorrect) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
 
     // Afficher la correction
@@ -187,7 +192,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
 
   const handleNextQuestion = () => {
     if (isLastQuestion) {
-      handleEndSession();
+      void handleEndSession();
     } else {
       animateTransition(() => {
         setCurrentQuestionIndex(prev => prev + 1);
@@ -200,62 +205,70 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
   };
 
   const handleEndSession = async () => {
-    if (!user) return;
-    
+    if (!user) {
+      return;
+    }
+
     // Terminer la session et récupérer les données
     const sessionData = await sessionService.endSession(user.id, sessionId, 'terminee');
-    
+
     if (sessionData) {
       // Calculer les statistiques détaillées
       const stats = await sessionService.getSessionStats(sessionData);
-      
+
       if (stats) {
         // Vérifier les badges et défis complétés
         const earnedRewards = await badgesService.checkAndAwardBadges(user.id);
-        console.log('Badges vérifiés après session:', earnedRewards);
-        
+        // Log removed
+
         // Si des badges ont été gagnés, récupérer leurs détails et naviguer vers l'animation
-        if (earnedRewards && earnedRewards.new_badges && earnedRewards.new_badges.length > 0) {
+        if (earnedRewards?.new_badges?.length > 0) {
           // Récupérer tous les badges de l'utilisateur pour avoir les détails
           const allBadges = await badgesService.getUserBadges(user.id);
-          console.log('Tous les badges de l\'utilisateur:', allBadges.length);
-          console.log('Nouveaux badges à afficher:', earnedRewards.new_badges);
-          
+          // Log removed
+          // Log removed
+
           // Filtrer pour ne garder que les nouveaux badges
-          const newBadgeDetails = allBadges.filter(badge => 
+          const newBadgeDetails = allBadges.filter(badge =>
             earnedRewards.new_badges.includes(badge.nom)
           );
-          
-          console.log('Détails des nouveaux badges trouvés:', newBadgeDetails);
-          
+
+          // Log removed
+
           // Transformer les données pour l'écran d'animation
           // Diviser les points équitablement entre tous les badges
-          const pointsPerBadge = newBadgeDetails.length > 0 
-            ? Math.floor(earnedRewards.total_points_earned / newBadgeDetails.length)
-            : earnedRewards.total_points_earned;
-            
+          const pointsPerBadge =
+            newBadgeDetails.length > 0
+              ? Math.floor(earnedRewards.total_points_earned / newBadgeDetails.length)
+              : earnedRewards.total_points_earned;
+
           const rewards = newBadgeDetails.map(badge => ({
             type: 'badge' as 'badge' | 'challenge' | 'rank',
             id: badge.id,
             name: badge.nom,
             description: badge.description,
             icon: badge.icone,
-            rarity: badge.niveau === 4 ? 'legendary' : 
-                   badge.niveau === 3 ? 'epic' : 
-                   badge.niveau === 2 ? 'rare' : 'common' as 'common' | 'rare' | 'epic' | 'legendary',
-            points: pointsPerBadge || badge.points_requis || 10
+            rarity:
+              badge.niveau === 4
+                ? 'legendary'
+                : badge.niveau === 3
+                  ? 'epic'
+                  : badge.niveau === 2
+                    ? 'rare'
+                    : ('common' as 'common' | 'rare' | 'epic' | 'legendary'),
+            points: pointsPerBadge || badge.points_requis || 10,
           }));
-          
+
           navigation.replace('RewardAnimation', {
             rewards,
-            sessionStats: stats
+            sessionStats: stats,
           });
         } else {
           // Pas de récompenses, aller directement au rapport
-          navigation.replace('SessionReport', { 
+          navigation.replace('SessionReport', {
             sessionId: sessionId || 0,
             stats,
-            sessionParams: route.params 
+            sessionParams: route.params,
           });
         }
       } else {
@@ -282,49 +295,53 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
       'Êtes-vous sûr de vouloir arrêter cette session ? Vous pourrez consulter vos résultats partiels.',
       [
         { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Quitter et voir résultats', 
-          onPress: async () => {
-            if (!user) {
-              navigation.navigate('HomeScreen');
-              return;
-            }
-            
-            // Terminer la session comme abandonnée et récupérer les données
-            const sessionData = await sessionService.endSession(user.id, sessionId, 'abandonnee');
-            
-            if (sessionData) {
-              const stats = await sessionService.getSessionStats(sessionData);
-              if (stats) {
-                // Vérifier les badges même pour une session abandonnée
-                // mais sans animation de récompense
-                await badgesService.checkAndAwardBadges(user.id);
-                
-                // Naviguer vers l'écran de rapport même pour une session abandonnée
-                navigation.replace('SessionReport', { 
-                  sessionId: sessionId || 0,
-                  stats,
-                  sessionParams: route.params,
-                  isAbandoned: true 
-                });
+        {
+          text: 'Quitter et voir résultats',
+          onPress: () => {
+            void (async () => {
+              if (!user) {
+                navigation.navigate('HomeScreen');
+                return;
+              }
+
+              // Terminer la session comme abandonnée et récupérer les données
+              const sessionData = await sessionService.endSession(user.id, sessionId, 'abandonnee');
+
+              if (sessionData) {
+                const stats = await sessionService.getSessionStats(sessionData);
+                if (stats) {
+                  // Vérifier les badges même pour une session abandonnée
+                  // mais sans animation de récompense
+                  await badgesService.checkAndAwardBadges(user.id);
+
+                  // Naviguer vers l'écran de rapport même pour une session abandonnée
+                  navigation.replace('SessionReport', {
+                    sessionId: sessionId || 0,
+                    stats,
+                    sessionParams: route.params,
+                    isAbandoned: true,
+                  });
+                } else {
+                  navigation.navigate('HomeScreen');
+                }
               } else {
                 navigation.navigate('HomeScreen');
               }
-            } else {
-              navigation.navigate('HomeScreen');
-            }
-          }
+            })();
+          },
         },
-        { 
-          text: 'Quitter sans résultats', 
+        {
+          text: 'Quitter sans résultats',
           style: 'destructive',
-          onPress: async () => {
-            if (user) {
-              await sessionService.endSession(user.id, sessionId, 'abandonnee');
-            }
-            navigation.navigate('HomeScreen');
-          }
-        }
+          onPress: () => {
+            void (async () => {
+              if (user) {
+                await sessionService.endSession(user.id, sessionId, 'abandonnee');
+              }
+              navigation.navigate('HomeScreen');
+            })();
+          },
+        },
       ]
     );
   };
@@ -346,7 +363,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
 
   const animateTransition = (callback: () => void) => {
     setIsTransitioning(true);
-    
+
     // Préparer la nouvelle question
     const nextIndex = currentQuestionIndex + 1;
     if (nextIndex < questions.length) {
@@ -354,13 +371,13 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
         question: questions[nextIndex],
         selectedAnswers: [],
         showCorrection: false,
-        showExplanation: false
+        showExplanation: false,
       });
-      
+
       // Pré-positionner la nouvelle question plus proche pour réduire le trajet
       nextQuestionTranslateX.setValue(30);
     }
-    
+
     // Animation fluide sans aucun délai - les deux animations démarrent simultanément
     Animated.parallel([
       // Ancienne question : slide rapide vers la gauche + fade out progressif
@@ -394,21 +411,21 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
       // Mettre à jour les états après l'animation
       callback();
       setNextQuestionData(null);
-      
+
       // Réinitialiser les animations pour la prochaine transition
       currentQuestionOpacity.setValue(1);
       currentQuestionTranslateX.setValue(0);
       nextQuestionOpacity.setValue(0);
       nextQuestionTranslateX.setValue(30);
-      
+
       setIsTransitioning(false);
     });
   };
 
-  const renderAnswer = (answer: any) => {
+  const renderAnswer = (answer: { id: number; lettre: string; est_correcte: boolean }) => {
     const isSelected = selectedAnswers.includes(answer.id);
     const isCorrect = answer.est_correcte;
-    
+
     let backgroundColor = colors.surface;
     let borderColor = colors.border;
     let textColor = colors.text;
@@ -433,11 +450,11 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
         key={answer.id}
         style={[
           styles.answerOption,
-          { 
+          {
             backgroundColor,
             borderColor,
             borderWidth: isSelected || (showCorrection && (isCorrect || isSelected)) ? 2 : 1,
-          }
+          },
         ]}
         onPress={() => handleAnswerSelect(answer.id)}
         disabled={showCorrection}
@@ -445,25 +462,17 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
       >
         <View style={styles.answerContent}>
           <View style={[styles.answerLetter, { backgroundColor: borderColor }]}>
-            <Text style={[styles.answerLetterText, { color: '#FFF' }]}>
-              {answer.lettre}
-            </Text>
+            <Text style={[styles.answerLetterText, { color: '#FFF' }]}>{answer.lettre}</Text>
           </View>
-          <Text style={[styles.answerText, { color: textColor }]}>
-            {answer.texte}
-          </Text>
+          <Text style={[styles.answerText, { color: textColor }]}>{answer.texte}</Text>
           {currentQuestion.type_question === 'QCM' && !showCorrection && (
             <View style={[styles.checkbox, { borderColor }]}>
-              {isSelected && (
-                <Ionicons name="checkmark" size={16} color={borderColor} />
-              )}
+              {isSelected && <Ionicons name="checkmark" size={16} color={borderColor} />}
             </View>
           )}
           {currentQuestion.type_question === 'QCU' && !showCorrection && (
             <View style={[styles.radio, { borderColor }]}>
-              {isSelected && (
-                <View style={[styles.radioDot, { backgroundColor: borderColor }]} />
-              )}
+              {isSelected && <View style={[styles.radioDot, { backgroundColor: borderColor }]} />}
             </View>
           )}
           {showCorrection && isCorrect && (
@@ -478,33 +487,22 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
   };
 
   const renderPauseModal = () => (
-    <Modal
-      visible={isPaused}
-      transparent
-      animationType="fade"
-      onRequestClose={handleResume}
-    >
-      <TouchableOpacity 
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={handleResume}
-      >
-        <TouchableOpacity 
+    <Modal visible={isPaused} transparent animationType="fade" onRequestClose={handleResume}>
+      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={handleResume}>
+        <TouchableOpacity
           activeOpacity={1}
           style={[styles.modalContent, { backgroundColor: colors.surface }]}
-          onPress={(e) => e.stopPropagation()}
+          onPress={e => e.stopPropagation()}
         >
           <Ionicons name="pause-circle" size={64} color={colors.primary} />
-          <Text style={[styles.modalTitle, { color: colors.text }]}>
-            Session en pause
-          </Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>Session en pause</Text>
           <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
             Question {currentQuestionIndex + 1}/{questions.length}
           </Text>
           <Text style={[styles.modalHint, { color: colors.textSecondary }]}>
             Score actuel : {sessionScore.toFixed(1)} pts
           </Text>
-          
+
           <TouchableOpacity
             style={[styles.modalButton, { backgroundColor: colors.primary }]}
             onPress={handleResume}
@@ -512,43 +510,42 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
             <Ionicons name="play" size={20} color="#FFF" />
             <Text style={styles.modalButtonText}>Reprendre</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.modalButton, { backgroundColor: colors.secondary }]}
-            onPress={async () => {
-              // Sauvegarder l'état actuel de la session
-              if (user) {
-                const sessionData = {
-                  id: sessionId,
-                  profile_id: user.id,
-                  questions,
-                  currentQuestionIndex,
-                  answers: userAnswers,
-                  score: sessionScore,
-                  startTime: new Date(),
-                  isPaused: true,
-                  settings
-                };
-                await sessionService.saveSessionLocally(user.id, sessionData);
-              }
-              setIsPaused(false);
-              navigation.navigate('HomeScreen');
+            onPress={() => {
+              void (async () => {
+                // Sauvegarder l'état actuel de la session
+                if (user) {
+                  const sessionData = {
+                    id: sessionId,
+                    profile_id: user.id,
+                    questions,
+                    currentQuestionIndex,
+                    answers: userAnswers,
+                    score: sessionScore,
+                    startTime: new Date(),
+                    isPaused: true,
+                    settings,
+                  };
+                  await sessionService.saveSessionLocally(user.id, sessionData);
+                }
+                setIsPaused(false);
+                navigation.navigate('HomeScreen');
+              })();
             }}
           >
             <Ionicons name="home-outline" size={20} color="#FFF" />
             <Text style={styles.modalButtonText}>Retour (session sauvegardée)</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.modalButton, styles.quitButton]}
-            onPress={handleQuit}
-          >
+
+          <TouchableOpacity style={[styles.modalButton, styles.quitButton]} onPress={handleQuit}>
             <Ionicons name="exit-outline" size={20} color={colors.error} />
             <Text style={[styles.modalButtonText, { color: colors.error }]}>
               Arrêter la session
             </Text>
           </TouchableOpacity>
-          
+
           <Text style={[styles.modalTip, { color: colors.textSecondary }]}>
             Touchez en dehors pour reprendre
           </Text>
@@ -588,14 +585,16 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.headerRight}>
           {settings.timerEnabled && !showCorrection && (
             <Timer
               duration={settings.timePerQuestion}
-              onTimeUp={handleValidate}
+              onTimeUp={() => void handleValidate()}
               isPaused={isPaused}
-              onTick={(time) => { timeSpentRef.current = settings.timePerQuestion - time; }}
+              onTick={time => {
+                timeSpentRef.current = settings.timePerQuestion - time;
+              }}
             />
           )}
           <TouchableOpacity onPress={handlePause} style={styles.pauseButton}>
@@ -620,107 +619,120 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
         >
           {currentQuestion && !nextQuestionData && (
             <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={[styles.questionCard, { backgroundColor: colors.surface }]}>
-              <View style={styles.questionHeader}>
-                <View style={[
-                  styles.questionTypeBadge,
-                  { backgroundColor: `${colors.secondary}15` }
-                ]}>
-                  <Text style={[styles.questionTypeText, { color: colors.secondary }]}>
-                    {currentQuestion.type_question}
-                  </Text>
-                </View>
-                <View style={styles.difficultyIndicator}>
-                  {[...Array(5)].map((_, i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.difficultyDot,
-                        {
-                          backgroundColor: i < currentQuestion.niveau_difficulte
-                            ? colors.primary
-                            : colors.border,
-                        },
-                      ]}
-                    />
-                  ))}
-                </View>
-              </View>
-              
-              <Text style={[styles.questionText, { color: colors.text }]}>
-                {currentQuestion.enonce}
-              </Text>
-            </View>
-
-          {/* Réponses */}
-          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-            {currentQuestion.reponses.map(renderAnswer)}
-          </Animated.View>
-
-          {/* Correction */}
-          {showCorrection && (
-            <Animated.View
-              style={[
-                styles.correctionCard,
-                { backgroundColor: colors.surface },
-              ]}
-            >
-              <View style={styles.correctionHeader}>
-                <View style={styles.correctionScore}>
-                  <Ionicons
-                    name={userAnswers[userAnswers.length - 1]?.isCorrect ? 'checkmark-circle' : 'close-circle'}
-                    size={24}
-                    color={userAnswers[userAnswers.length - 1]?.isCorrect ? colors.success : colors.error}
-                  />
-                  <Text style={[
-                    styles.correctionScoreText,
-                    { color: userAnswers[userAnswers.length - 1]?.points >= 0 ? colors.success : colors.error }
-                  ]}>
-                    {userAnswers[userAnswers.length - 1]?.points >= 0 ? '+' : ''}
-                    {userAnswers[userAnswers.length - 1]?.points.toFixed(1)} point{Math.abs(userAnswers[userAnswers.length - 1]?.points) !== 1 ? 's' : ''}
-                  </Text>
-                </View>
-              </View>
-
-              {currentQuestion.explication ? (
-                <>
-                  <TouchableOpacity
-                    style={styles.explanationToggle}
-                    onPress={() => setShowExplanation(!showExplanation)}
+              <View style={[styles.questionCard, { backgroundColor: colors.surface }]}>
+                <View style={styles.questionHeader}>
+                  <View
+                    style={[styles.questionTypeBadge, { backgroundColor: `${colors.secondary}15` }]}
                   >
-                    <Text style={[styles.explanationToggleText, { color: colors.primary }]}>
-                      {showExplanation ? 'Masquer' : 'Voir'} l'explication
+                    <Text style={[styles.questionTypeText, { color: colors.secondary }]}>
+                      {currentQuestion.type_question}
                     </Text>
-                    <Ionicons
-                      name={showExplanation ? 'chevron-up' : 'chevron-down'}
-                      size={20}
-                      color={colors.primary}
-                    />
-                  </TouchableOpacity>
+                  </View>
+                  <View style={styles.difficultyIndicator}>
+                    {[...Array(5)].map((_, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          styles.difficultyDot,
+                          {
+                            backgroundColor:
+                              i < currentQuestion.niveau_difficulte
+                                ? colors.primary
+                                : colors.border,
+                          },
+                        ]}
+                      />
+                    ))}
+                  </View>
+                </View>
 
-                  {showExplanation && (
-                    <View style={styles.explanationContent}>
-                      <Text style={[styles.explanationText, { color: colors.text }]}>
-                        {currentQuestion.explication.texte_explication}
+                <Text style={[styles.questionText, { color: colors.text }]}>
+                  {currentQuestion.enonce}
+                </Text>
+              </View>
+
+              {/* Réponses */}
+              <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                {currentQuestion.reponses.map(renderAnswer)}
+              </Animated.View>
+
+              {/* Correction */}
+              {showCorrection && (
+                <Animated.View style={[styles.correctionCard, { backgroundColor: colors.surface }]}>
+                  <View style={styles.correctionHeader}>
+                    <View style={styles.correctionScore}>
+                      <Ionicons
+                        name={
+                          userAnswers[userAnswers.length - 1]?.isCorrect
+                            ? 'checkmark-circle'
+                            : 'close-circle'
+                        }
+                        size={24}
+                        color={
+                          userAnswers[userAnswers.length - 1]?.isCorrect
+                            ? colors.success
+                            : colors.error
+                        }
+                      />
+                      <Text
+                        style={[
+                          styles.correctionScoreText,
+                          {
+                            color:
+                              userAnswers[userAnswers.length - 1]?.points >= 0
+                                ? colors.success
+                                : colors.error,
+                          },
+                        ]}
+                      >
+                        {userAnswers[userAnswers.length - 1]?.points >= 0 ? '+' : ''}
+                        {userAnswers[userAnswers.length - 1]?.points.toFixed(1)} point
+                        {Math.abs(userAnswers[userAnswers.length - 1]?.points) !== 1 ? 's' : ''}
                       </Text>
-                      {currentQuestion.explication.source && (
-                        <Text style={[styles.explanationSource, { color: colors.textSecondary }]}>
-                          Source : {currentQuestion.explication.source}
+                    </View>
+                  </View>
+
+                  {currentQuestion.explication ? (
+                    <>
+                      <TouchableOpacity
+                        style={styles.explanationToggle}
+                        onPress={() => setShowExplanation(!showExplanation)}
+                      >
+                        <Text style={[styles.explanationToggleText, { color: colors.primary }]}>
+                          {showExplanation ? 'Masquer' : 'Voir'} l'explication
                         </Text>
+                        <Ionicons
+                          name={showExplanation ? 'chevron-up' : 'chevron-down'}
+                          size={20}
+                          color={colors.primary}
+                        />
+                      </TouchableOpacity>
+
+                      {showExplanation && (
+                        <View style={styles.explanationContent}>
+                          <Text style={[styles.explanationText, { color: colors.text }]}>
+                            {currentQuestion.explication.texte_explication}
+                          </Text>
+                          {currentQuestion.explication.source && (
+                            <Text
+                              style={[styles.explanationSource, { color: colors.textSecondary }]}
+                            >
+                              Source : {currentQuestion.explication.source}
+                            </Text>
+                          )}
+                        </View>
                       )}
+                    </>
+                  ) : (
+                    <View style={styles.noExplanation}>
+                      <Text style={[styles.noExplanationText, { color: colors.textSecondary }]}>
+                        Pas d'explication disponible pour cette question
+                      </Text>
                     </View>
                   )}
-                </>
-              ) : (
-                <View style={styles.noExplanation}>
-                  <Text style={[styles.noExplanationText, { color: colors.textSecondary }]}>
-                    Pas d'explication disponible pour cette question
-                  </Text>
-                </View>
+                </Animated.View>
               )}
-            </Animated.View>
-          )}
-          </ScrollView>
+            </ScrollView>
           )}
         </Animated.View>
 
@@ -740,10 +752,9 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={[styles.questionCard, { backgroundColor: colors.surface }]}>
                 <View style={styles.questionHeader}>
-                  <View style={[
-                    styles.questionTypeBadge,
-                    { backgroundColor: `${colors.secondary}15` }
-                  ]}>
+                  <View
+                    style={[styles.questionTypeBadge, { backgroundColor: `${colors.secondary}15` }]}
+                  >
                     <Text style={[styles.questionTypeText, { color: colors.secondary }]}>
                       {nextQuestionData.question.type_question}
                     </Text>
@@ -755,32 +766,33 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
                         style={[
                           styles.difficultyDot,
                           {
-                            backgroundColor: i < nextQuestionData.question.niveau_difficulte
-                              ? colors.primary
-                              : colors.border,
+                            backgroundColor:
+                              i < nextQuestionData.question.niveau_difficulte
+                                ? colors.primary
+                                : colors.border,
                           },
                         ]}
                       />
                     ))}
                   </View>
                 </View>
-                
+
                 <Text style={[styles.questionText, { color: colors.text }]}>
                   {nextQuestionData.question.enonce}
                 </Text>
               </View>
 
               {/* Réponses de la nouvelle question */}
-              {nextQuestionData.question.reponses.map((answer: any) => (
+              {nextQuestionData.question.reponses.map((answer: { id: string; texte: string }) => (
                 <View
                   key={answer.id}
                   style={[
                     styles.answerOption,
-                    { 
+                    {
                       backgroundColor: colors.surface,
                       borderColor: colors.border,
                       borderWidth: 1,
-                    }
+                    },
                   ]}
                 >
                   <View style={styles.answerContent}>
@@ -789,9 +801,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
                         {answer.lettre}
                       </Text>
                     </View>
-                    <Text style={[styles.answerText, { color: colors.text }]}>
-                      {answer.texte}
-                    </Text>
+                    <Text style={[styles.answerText, { color: colors.text }]}>{answer.texte}</Text>
                     {nextQuestionData.question.type_question === 'QCM' && (
                       <View style={[styles.checkbox, { borderColor: colors.border }]} />
                     )}
@@ -807,20 +817,17 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
       </View>
 
       {/* Footer */}
-      <ButtonContainer 
-        backgroundColor={colors.background} 
-        borderColor={colors.border}
-      >
+      <ButtonContainer backgroundColor={colors.background} borderColor={colors.border}>
         {!showCorrection ? (
           <TouchableOpacity
             style={[
               styles.validateButton,
-              { 
+              {
                 backgroundColor: colors.primary,
-                opacity: (selectedAnswers.length === 0 || isTransitioning) ? 0.5 : 1
-              }
+                opacity: selectedAnswers.length === 0 || isTransitioning ? 0.5 : 1,
+              },
             ]}
-            onPress={handleValidate}
+            onPress={() => void handleValidate()}
             disabled={selectedAnswers.length === 0 || isTransitioning}
           >
             <Text style={styles.validateButtonText}>Valider</Text>
@@ -829,13 +836,13 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
         ) : (
           <TouchableOpacity
             style={[
-              styles.nextButton, 
-              { 
+              styles.nextButton,
+              {
                 backgroundColor: colors.primary,
-                opacity: isTransitioning ? 0.5 : 1
-              }
+                opacity: isTransitioning ? 0.5 : 1,
+              },
             ]}
-            onPress={handleNextQuestion}
+            onPress={() => void handleNextQuestion()}
             disabled={isTransitioning}
           >
             <Text style={styles.nextButtonText}>

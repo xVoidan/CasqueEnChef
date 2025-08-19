@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,32 +6,32 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  Image,
   FlatList,
-  NativeScrollEvent,
+  Image,
   NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../contexts/ThemeContext';
-import { useAuth } from '../contexts/AuthContext';
-import { spacing, typography, borderRadius, shadows } from '../styles/theme';
-import { HomeStackScreenProps } from '../types/navigation';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
-  useAnimatedStyle,
   useSharedValue,
-  withSpring,
-  withTiming,
+  useAnimatedStyle,
   interpolate,
   Extrapolate,
-  FadeInDown,
-  FadeInUp,
   SlideInRight,
+  FadeInUp,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../config/supabase';
 import { avatarService } from '../services/avatarService';
+import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { spacing, typography, borderRadius, shadows } from '../styles/theme';
+import { HomeStackScreenProps } from '../types/navigation';
+
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-native/no-color-literals */
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -63,31 +63,29 @@ interface Tip {
 export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navigation }) => {
   const { colors } = useTheme();
   const { user } = useAuth();
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<{
+    nom_complet?: string;
+    points_total?: number;
+    serie_actuelle?: number;
+    rang_actuel?: number;
+    points_hebdo?: number;
+  } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [lastSession, setLastSession] = useState<any>(null);
+  const [lastSession, setLastSession] = useState<{
+    date_session?: string;
+    score?: number;
+    temps_total?: number;
+  } | null>(null);
   const [weeklyStats, setWeeklyStats] = useState({ sessions: 0, correctRate: 0, streak: 0 });
   const [tips, setTips] = useState<Tip[]>([]);
   const scrollY = useSharedValue(0);
   const carouselRef = useRef<FlatList>(null);
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
-  useEffect(() => {
-    loadUserData();
-    loadTips();
-    // Auto-scroll carousel
-    const interval = setInterval(() => {
-      if (carouselRef.current && tips.length > 1) {
-        const nextIndex = (currentTipIndex + 1) % tips.length;
-        carouselRef.current.scrollToIndex({ index: nextIndex, animated: true });
-        setCurrentTipIndex(nextIndex);
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [currentTipIndex, tips.length]);
-
-  const loadUserData = async () => {
-    if (!user) return;
+  const loadUserData = useCallback(async () => {
+    if (!user) {
+      return;
+    }
 
     try {
       // Charger le profil utilisateur
@@ -96,16 +94,16 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
         .select('*')
         .eq('id', user.id)
         .single();
-      
+
       setUserProfile(profile);
-      
+
       // Charger l'avatar séparément avec avatarService
       try {
         const avatar = await avatarService.getAvatar(user.id);
         if (avatar) {
           setAvatarUrl(avatar);
         }
-      } catch (error) {
+      } catch {
         // Silently handle avatar loading error
       }
 
@@ -116,7 +114,7 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
         .eq('profile_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1);
-      
+
       if (sessions && sessions.length > 0) {
         setLastSession(sessions[0]);
       }
@@ -124,26 +122,29 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
       // Charger les stats hebdomadaires
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      
+
       const { data: weekSessions } = await supabase
         .from('sessions')
         .select('*')
         .eq('profile_id', user.id)
         .gte('created_at', weekAgo.toISOString());
-      
+
       if (weekSessions) {
         const totalQuestions = weekSessions.reduce((acc, s) => acc + s.nombre_questions, 0);
-        const correctAnswers = weekSessions.reduce((acc, s) => acc + s.nombre_reponses_correctes, 0);
+        const correctAnswers = weekSessions.reduce(
+          (acc, s) => acc + s.nombre_reponses_correctes,
+          0
+        );
         const rate = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
-        
+
         // Calculer la série (simplified)
         const today = new Date();
         let streak = 0;
         for (let i = 0; i < 30; i++) {
           const date = new Date(today);
           date.setDate(date.getDate() - i);
-          const daySession = weekSessions.find(s => 
-            new Date(s.created_at).toDateString() === date.toDateString()
+          const daySession = weekSessions.find(
+            s => new Date(s.created_at).toDateString() === date.toDateString()
           );
           if (daySession) {
             streak++;
@@ -151,17 +152,31 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
             break;
           }
         }
-        
+
         setWeeklyStats({
           sessions: weekSessions.length,
           correctRate: rate,
           streak,
         });
       }
-    } catch (error) {
+    } catch {
       // Silently handle user data loading error
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    void loadUserData();
+    loadTips();
+    // Auto-scroll carousel
+    const interval = setInterval(() => {
+      if (carouselRef.current && tips.length > 1) {
+        const nextIndex = (currentTipIndex + 1) % tips.length;
+        carouselRef.current.scrollToIndex({ index: nextIndex, animated: true });
+        setCurrentTipIndex(nextIndex);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [currentTipIndex, tips.length, loadUserData]);
 
   const loadTips = () => {
     // Simuler des tips (à remplacer par un appel API)
@@ -169,7 +184,8 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
       {
         id: '1',
         title: 'Conseil du jour',
-        description: 'Révisez régulièrement les procédures d\'intervention pour maintenir vos réflexes.',
+        description:
+          "Révisez régulièrement les procédures d'intervention pour maintenir vos réflexes.",
         type: 'tip',
         date: new Date(),
       },
@@ -198,7 +214,7 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
       icon: 'school',
       colors: ['#DC2626', '#EF4444'],
       available: true,
-      action: () => navigation.navigate('TrainingConfig'),
+      action: () => void void navigation.navigate('TrainingConfig'),
     },
     {
       id: '2',
@@ -232,7 +248,7 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
   const quickStats: QuickStat[] = [
     {
       label: 'Dernière session',
-      value: lastSession 
+      value: lastSession
         ? `${lastSession.nombre_reponses_correctes}/${lastSession.nombre_questions}`
         : '-',
       icon: 'checkmark-circle',
@@ -259,38 +275,39 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
   const headerAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateY: interpolate(
-          scrollY.value,
-          [0, 100],
-          [0, -50],
-          Extrapolate.CLAMP
-        ),
+        translateY: interpolate(scrollY.value, [0, 100], [0, -50], Extrapolate.CLAMP),
       },
     ],
-    opacity: interpolate(
-      scrollY.value,
-      [0, 100],
-      [1, 0.8],
-      Extrapolate.CLAMP
-    ),
+    opacity: interpolate(scrollY.value, [0, 100], [1, 0.8], Extrapolate.CLAMP),
   }));
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Bonjour';
-    if (hour < 18) return 'Bon après-midi';
+    if (hour < 12) {
+      return 'Bonjour';
+    }
+    if (hour < 18) {
+      return 'Bon après-midi';
+    }
     return 'Bonsoir';
   };
 
   const renderTip = ({ item }: { item: Tip }) => (
     <View style={[styles.tipCard, { backgroundColor: colors.surface }]}>
       <View style={styles.tipHeader}>
-        <View style={[
-          styles.tipBadge,
-          { backgroundColor: item.type === 'tip' ? '#3B82F6' : item.type === 'update' ? '#10B981' : '#F59E0B' }
-        ]}>
-          <Ionicons 
-            name={item.type === 'tip' ? 'bulb' : item.type === 'update' ? 'add-circle' : 'megaphone'}
+        <View
+          style={[
+            styles.tipBadge,
+            {
+              backgroundColor:
+                item.type === 'tip' ? '#3B82F6' : item.type === 'update' ? '#10B981' : '#F59E0B',
+            },
+          ]}
+        >
+          <Ionicons
+            name={
+              item.type === 'tip' ? 'bulb' : item.type === 'update' ? 'add-circle' : 'megaphone'
+            }
             size={16}
             color="#FFFFFF"
           />
@@ -305,7 +322,7 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Animated.ScrollView 
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
@@ -318,17 +335,17 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
                 {getGreeting()},
               </Text>
               <Text style={[styles.userName, { color: colors.text }]}>
-                {userProfile?.username || user?.username || 'Invité'}
+                {userProfile?.username ?? user?.username ?? 'Invité'}
               </Text>
             </View>
             <View style={styles.headerRight}>
               <TouchableOpacity
-                onPress={() => navigation.navigate('ProfileScreen')}
+                onPress={() => void navigation.navigate('ProfileScreen')}
                 style={styles.avatarContainer}
                 activeOpacity={0.7}
               >
                 {avatarUrl ? (
-                  <Image 
+                  <Image
                     source={{ uri: avatarUrl }}
                     style={styles.avatar}
                     resizeMode="cover"
@@ -339,7 +356,7 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
                 ) : (
                   <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
                     <Text style={styles.avatarText}>
-                      {(userProfile?.username || user?.username || 'U')[0].toUpperCase()}
+                      {(userProfile?.username ?? user?.username ?? 'U')[0].toUpperCase()}
                     </Text>
                   </View>
                 )}
@@ -350,12 +367,10 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
 
         {/* Section principale - Cartes d'entraînement */}
         <View style={styles.mainSection}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Modes d'entraînement
-          </Text>
-          
-          <ScrollView 
-            horizontal 
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Modes d'entraînement</Text>
+
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             pagingEnabled
             snapToInterval={SCREEN_WIDTH - spacing.lg * 2}
@@ -363,14 +378,11 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
             contentContainerStyle={styles.cardsContainer}
           >
             {trainingCards.map((card, index) => (
-              <Animated.View
-                key={card.id}
-                entering={SlideInRight.duration(500).delay(index * 100)}
-              >
+              <Animated.View key={card.id} entering={SlideInRight.duration(500).delay(index * 100)}>
                 <TouchableOpacity
                   onPress={() => {
                     if (card.available) {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       card.action();
                     }
                   }}
@@ -380,10 +392,7 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
                 >
                   <LinearGradient
                     colors={card.available ? card.colors : ['#9CA3AF', '#6B7280']}
-                    style={[
-                      styles.trainingCard,
-                      !card.available && styles.disabledCard,
-                    ]}
+                    style={[styles.trainingCard, !card.available && styles.disabledCard]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
@@ -405,14 +414,9 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
         </View>
 
         {/* Section statistiques rapides */}
-        <Animated.View 
-          entering={FadeInUp.duration(600).delay(400)}
-          style={styles.statsSection}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Vos performances
-          </Text>
-          
+        <Animated.View entering={FadeInUp.duration(600).delay(400)} style={styles.statsSection}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Vos performances</Text>
+
           <View style={styles.statsGrid}>
             {quickStats.map((stat, index) => (
               <Animated.View
@@ -423,9 +427,7 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
                 <View style={[styles.statIcon, { backgroundColor: `${stat.color}15` }]}>
                   <Ionicons name={stat.icon} size={24} color={stat.color} />
                 </View>
-                <Text style={[styles.statValue, { color: colors.text }]}>
-                  {stat.value}
-                </Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
                   {stat.label}
                 </Text>
@@ -435,30 +437,27 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
         </Animated.View>
 
         {/* Carousel Actualités/Tips */}
-        <Animated.View 
-          entering={FadeInUp.duration(600).delay(800)}
-          style={styles.tipsSection}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Actualités & Conseils
-          </Text>
-          
+        <Animated.View entering={FadeInUp.duration(600).delay(800)} style={styles.tipsSection}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Actualités & Conseils</Text>
+
           <FlatList
             ref={carouselRef}
             data={tips}
             renderItem={renderTip}
-            keyExtractor={(item) => item.id}
+            keyExtractor={item => item.id}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             snapToInterval={SCREEN_WIDTH - spacing.lg * 2}
             decelerationRate="fast"
-            onMomentumScrollEnd={(event) => {
-              const newIndex = Math.round(event.nativeEvent.contentOffset.x / (SCREEN_WIDTH - spacing.lg * 2));
+            onMomentumScrollEnd={event => {
+              const newIndex = Math.round(
+                event.nativeEvent.contentOffset.x / (SCREEN_WIDTH - spacing.lg * 2)
+              );
               setCurrentTipIndex(newIndex);
             }}
           />
-          
+
           {/* Indicateurs de pagination */}
           <View style={styles.paginationContainer}>
             {tips.map((_, index) => (
@@ -466,7 +465,7 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
                 key={index}
                 style={[
                   styles.paginationDot,
-                  { backgroundColor: index === currentTipIndex ? colors.primary : colors.border }
+                  { backgroundColor: index === currentTipIndex ? colors.primary : colors.border },
                 ]}
               />
             ))}

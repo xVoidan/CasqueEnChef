@@ -1,19 +1,16 @@
-import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Dimensions,
-  TouchableOpacity,
-} from 'react-native';
+import React, {
+  /* eslint-disable react-native/no-inline-styles */ useEffect,
+  useRef,
+  useCallback,
+} from 'react';
+import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../contexts/ThemeContext';
 import { spacing, typography, borderRadius, shadows } from '../styles/theme';
 import * as Haptics from 'expo-haptics';
 
-const { width } = Dimensions.get('window');
+// Dimensions removed as width was not used
 
 interface BadgeNotificationProps {
   visible: boolean;
@@ -37,10 +34,28 @@ export const BadgeNotification: React.FC<BadgeNotificationProps> = ({
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.8)).current;
 
+  const handleClose = useCallback(() => {
+    // Animation de sortie
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: -200,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  }, [translateY, opacity, onClose]);
+
   useEffect(() => {
     if (visible && badge) {
       // Haptic feedback pour nouveau badge
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
       // Animation d'entrée
       Animated.parallel([
@@ -89,27 +104,11 @@ export const BadgeNotification: React.FC<BadgeNotificationProps> = ({
         }),
       ]).start();
     }
-  }, [visible, badge]);
+  }, [visible, badge, handleClose, opacity, scale, translateY]);
 
-  const handleClose = () => {
-    // Animation de sortie
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: -200,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onClose();
-    });
-  };
-
-  if (!badge) return null;
+  if (!badge) {
+    return null;
+  }
 
   return (
     <Animated.View
@@ -124,10 +123,7 @@ export const BadgeNotification: React.FC<BadgeNotificationProps> = ({
     >
       <TouchableOpacity activeOpacity={0.9} onPress={handleClose}>
         <LinearGradient
-          colors={isDark 
-            ? ['#1F2937', '#111827']
-            : ['#FFFFFF', '#F9FAFB']
-          }
+          colors={isDark ? ['#1F2937', '#111827'] : ['#FFFFFF', '#F9FAFB']}
           style={[styles.notification, shadows.lg]}
         >
           {/* Particules d'effet */}
@@ -139,10 +135,7 @@ export const BadgeNotification: React.FC<BadgeNotificationProps> = ({
                   styles.particle,
                   {
                     backgroundColor: badge.couleur,
-                    transform: [
-                      { rotate: `${i * 60}deg` },
-                      { translateX: 30 },
-                    ],
+                    transform: [{ rotate: `${i * 60}deg` }, { translateX: 30 }],
                   },
                 ]}
               />
@@ -153,15 +146,15 @@ export const BadgeNotification: React.FC<BadgeNotificationProps> = ({
           <View style={styles.content}>
             <View style={styles.header}>
               <View style={[styles.iconContainer, { backgroundColor: badge.couleur + '20' }]}>
-                <Ionicons name={badge.icone as any} size={32} color={badge.couleur} />
+                <Ionicons
+                  name={badge.icone as keyof typeof Ionicons.glyphMap}
+                  size={32}
+                  color={badge.couleur}
+                />
               </View>
               <View style={styles.textContainer}>
-                <Text style={[styles.title, { color: colors.text }]}>
-                  Nouveau badge débloqué !
-                </Text>
-                <Text style={[styles.badgeName, { color: badge.couleur }]}>
-                  {badge.nom}
-                </Text>
+                <Text style={[styles.title, { color: colors.text }]}>Nouveau badge débloqué !</Text>
+                <Text style={[styles.badgeName, { color: badge.couleur }]}>{badge.nom}</Text>
               </View>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                 <Ionicons name="close" size={24} color={colors.textSecondary} />
@@ -186,10 +179,10 @@ export const BadgeNotification: React.FC<BadgeNotificationProps> = ({
               <Animated.View
                 style={[
                   styles.progressFill,
-                  { 
+                  {
                     backgroundColor: badge.couleur,
-                    width: visible ? '100%' : '0%',
-                  }
+                    width: '100%',
+                  },
                 ]}
               />
             </View>
@@ -281,7 +274,5 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    animationDuration: '5s',
-    animationTimingFunction: 'linear',
   },
 });

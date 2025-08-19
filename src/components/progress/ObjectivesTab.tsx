@@ -1,16 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, {
+  /* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-explicit-any */ useState,
+  useEffect,
+} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { 
-  FadeInDown, 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withSpring 
-} from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { shadows, borderRadius } from '../../styles/theme';
 import { progressService, UserObjectives } from '../../services/progressService';
+import { COLORS } from '../../constants/styleConstants';
 
 interface Badge {
   id: string;
@@ -22,6 +28,9 @@ interface Badge {
   progress: number;
   maxProgress: number;
   earnedDate?: string;
+  max?: number;
+  radius?: number;
+  strokeWidth?: number;
 }
 
 interface DailyObjective {
@@ -44,11 +53,11 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [objectivesData, setObjectivesData] = useState<UserObjectives | null>(null);
+  const [_objectivesData, setObjectivesData] = useState<UserObjectives | null>(null);
 
   useEffect(() => {
-    fetchObjectivesAndBadges();
-  }, [userId]);
+    void fetchObjectivesAndBadges();
+  }, [userId]); // fetchObjectives is intentionally omitted
 
   const fetchObjectivesAndBadges = async () => {
     if (!userId) {
@@ -58,10 +67,10 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
 
     try {
       const data = await progressService.getUserObjectivesAndBadges(userId);
-      
+
       if (data) {
         setObjectivesData(data);
-        
+
         // Configuration des objectifs quotidiens
         setDailyObjectives([
           {
@@ -74,7 +83,7 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
           },
           {
             id: '2',
-            title: 'Temps d\'étude',
+            title: "Temps d'étude",
             current: Math.floor(data.temps_aujourdhui / 60),
             target: 30,
             icon: 'time',
@@ -100,7 +109,7 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
             description: badgeInfo.description,
             icon: badgeInfo.icon,
             color: badgeInfo.color,
-            earned: earned as boolean,
+            earned: earned,
             progress: earned ? 1 : 0,
             maxProgress: 1,
             earnedDate: earned ? new Date().toISOString() : undefined,
@@ -118,8 +127,7 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
     }
   };
 
-
-  const CircularProgress = ({ progress, max, radius = 30, strokeWidth = 4, color }: any) => {
+  const CircularProgress = ({ progress, max, radius = 30, strokeWidth = 4, color }: Badge) => {
     const circumference = 2 * Math.PI * radius;
     const percentage = (progress / max) * 100;
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
@@ -162,8 +170,8 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
   }
 
   return (
-    <ScrollView 
-      style={styles.container} 
+    <ScrollView
+      style={styles.container}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
@@ -179,7 +187,7 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
           <View style={styles.streakInfo}>
             <Text style={[styles.streakTitle, { color: colors.text }]}>Série en cours</Text>
             <View style={styles.streakNumbers}>
-              <Text style={[styles.streakCurrent, { color: '#EF4444' }]}>{streak}</Text>
+              <Text style={[styles.streakCurrent, styles.streakCurrentColor]}>{streak}</Text>
               <Text style={[styles.streakDays, { color: colors.text }]}> jours</Text>
             </View>
             <Text style={[styles.streakBest, { color: colors.textSecondary }]}>
@@ -187,7 +195,7 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.weekIndicator}>
           {[...Array(7)].map((_, index) => {
             const isActive = index < streak;
@@ -196,9 +204,7 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
                 key={index}
                 style={[
                   styles.dayIndicator,
-                  {
-                    backgroundColor: isActive ? '#EF4444' : colors.border,
-                  },
+                  isActive ? styles.dayIndicatorActive : { backgroundColor: colors.border },
                 ]}
               />
             );
@@ -215,47 +221,45 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
             const isCompleted = objective.current >= objective.target;
 
             return (
-              <Animated.View
-                key={objective.id}
-                entering={FadeInDown.delay(index * 100)}
-              >
-                <View style={[styles.objectiveCard, { backgroundColor: colors.surface }, shadows.sm]}>
-                <View style={styles.objectiveHeader}>
-                  <View
-                    style={[
-                      styles.objectiveIcon,
-                      { backgroundColor: objective.color + '20' },
-                    ]}
-                  >
-                    <Ionicons name={objective.icon as any} size={24} color={objective.color} />
-                  </View>
-                  {isCompleted && (
-                    <View style={styles.completedBadge}>
-                      <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+              <Animated.View key={objective.id} entering={FadeInDown.delay(index * 100)}>
+                <View
+                  style={[styles.objectiveCard, { backgroundColor: colors.surface }, shadows.sm]}
+                >
+                  <View style={styles.objectiveHeader}>
+                    <View
+                      style={[styles.objectiveIcon, { backgroundColor: objective.color + '20' }]}
+                    >
+                      <Ionicons name={objective.icon as any} size={24} color={objective.color} />
                     </View>
-                  )}
-                </View>
-                
-                <Text style={[styles.objectiveTitle, { color: colors.text }]}>
-                  {objective.title}
-                </Text>
-                
-                <View style={styles.progressContainer}>
-                  <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
-                    <Animated.View
-                      style={[
-                        styles.progressFill,
-                        {
-                          backgroundColor: isCompleted ? '#10B981' : objective.color,
-                          width: `${Math.min(progress, 100)}%`,
-                        },
-                      ]}
-                    />
+                    {isCompleted && (
+                      <View style={styles.completedBadge}>
+                        <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                      </View>
+                    )}
                   </View>
-                  <Text style={[styles.progressText, { color: colors.textSecondary }]}>
-                    {objective.current}/{objective.target}
+
+                  <Text style={[styles.objectiveTitle, { color: colors.text }]}>
+                    {objective.title}
                   </Text>
-                </View>
+
+                  <View style={styles.progressContainer}>
+                    <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+                      <Animated.View
+                        style={[
+                          styles.progressFill,
+                          isCompleted
+                            ? styles.iconContainerCompleted
+                            : { backgroundColor: objective.color },
+                          {
+                            width: `${Math.min(progress, 100)}%`,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+                      {objective.current}/{objective.target}
+                    </Text>
+                  </View>
                 </View>
               </Animated.View>
             );
@@ -278,69 +282,65 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
                   styles.badgeCard,
                   {
                     backgroundColor: colors.surface,
-                    opacity: badge.earned ? 1 : 0.7,
                   },
-                  shadows.sm
+                  badge.earned ? styles.badgeEarned : styles.badgeNotEarned,
+                  shadows.sm,
                 ]}
               >
-              <TouchableOpacity activeOpacity={0.8}>
-                <View style={styles.badgeContent}>
-                  <View
-                    style={[
-                      styles.badgeIconContainer,
-                      {
-                        backgroundColor: badge.earned
-                          ? badge.color + '20'
-                          : colors.surface,
-                      },
-                    ]}
-                  >
-                    {badge.earned ? (
-                      <Ionicons name={badge.icon as any} size={32} color={badge.color} />
-                    ) : (
-                      <View style={styles.badgeProgressContainer}>
-                        <CircularProgress
-                          progress={badge.progress}
-                          max={badge.maxProgress}
-                          color={badge.color}
-                        />
-                        <Text style={[styles.badgeProgressText, { color: colors.text }]}>
-                          {Math.round((badge.progress / badge.maxProgress) * 100)}%
-                        </Text>
-                      </View>
+                <TouchableOpacity activeOpacity={0.8}>
+                  <View style={styles.badgeContent}>
+                    <View
+                      style={[
+                        styles.badgeIconContainer,
+                        {
+                          backgroundColor: badge.earned ? badge.color + '20' : colors.surface,
+                        },
+                      ]}
+                    >
+                      {badge.earned ? (
+                        <Ionicons name={badge.icon as any} size={32} color={badge.color} />
+                      ) : (
+                        <View style={styles.badgeProgressContainer}>
+                          <CircularProgress
+                            progress={badge.progress}
+                            max={badge.maxProgress}
+                            color={badge.color}
+                          />
+                          <Text style={[styles.badgeProgressText, { color: colors.text }]}>
+                            {Math.round((badge.progress / badge.maxProgress) * 100)}%
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <Text
+                      style={[
+                        styles.badgeName,
+                        { color: badge.earned ? colors.text : colors.textSecondary },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {badge.name}
+                    </Text>
+
+                    <Text
+                      style={[styles.badgeDescription, { color: colors.textSecondary }]}
+                      numberOfLines={2}
+                    >
+                      {badge.description}
+                    </Text>
+
+                    {badge.earned && badge.earnedDate && (
+                      <Text style={[styles.badgeDate, { color: badge.color }]}>✓ Obtenu</Text>
+                    )}
+
+                    {!badge.earned && (
+                      <Text style={[styles.badgeProgress, { color: colors.textSecondary }]}>
+                        {badge.progress}/{badge.maxProgress}
+                      </Text>
                     )}
                   </View>
-                  
-                  <Text
-                    style={[
-                      styles.badgeName,
-                      { color: badge.earned ? colors.text : colors.textSecondary },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {badge.name}
-                  </Text>
-                  
-                  <Text
-                    style={[styles.badgeDescription, { color: colors.textSecondary }]}
-                    numberOfLines={2}
-                  >
-                    {badge.description}
-                  </Text>
-                  
-                  {badge.earned && badge.earnedDate && (
-                    <Text style={[styles.badgeDate, { color: badge.color }]}>
-                      ✓ Obtenu
-                    </Text>
-                  )}
-                  
-                  {!badge.earned && (
-                    <Text style={[styles.badgeProgress, { color: colors.textSecondary }]}>
-                      {badge.progress}/{badge.maxProgress}
-                    </Text>
-                  )}
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
               </View>
             </Animated.View>
           ))}
@@ -348,7 +348,7 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
       </View>
 
       {/* Espace pour la tabbar */}
-      <View style={{ height: 120 }} />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 };
@@ -528,5 +528,23 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
+  },
+  streakCurrentColor: {
+    color: COLORS.error,
+  },
+  dayIndicatorActive: {
+    backgroundColor: COLORS.error,
+  },
+  iconContainerCompleted: {
+    backgroundColor: COLORS.success,
+  },
+  badgeEarned: {
+    opacity: 1,
+  },
+  badgeNotEarned: {
+    opacity: 0.7,
+  },
+  bottomSpacer: {
+    height: 120,
   },
 });

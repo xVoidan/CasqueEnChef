@@ -27,15 +27,13 @@ class ProfileService {
    */
   async getProfile(userId: string) {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       return { data, error: null };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur lors de la récupération du profil:', error);
       return { data: null, error: error.message };
     }
@@ -53,9 +51,11 @@ class ProfileService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       return { data, error: null };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       return { data: null, error: error.message };
     }
@@ -70,9 +70,11 @@ class ProfileService {
         password: newPassword,
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       return { success: true, error: null };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur lors du changement de mot de passe:', error);
       return { success: false, error: error.message };
     }
@@ -87,10 +89,12 @@ class ProfileService {
         email: newEmail,
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       return { success: true, error: null };
-    } catch (error: any) {
-      console.error('Erreur lors du changement d\'email:', error);
+    } catch (error) {
+      console.error("Erreur lors du changement d'email:", error);
       return { success: false, error: error.message };
     }
   }
@@ -106,10 +110,13 @@ class ProfileService {
   async getUserStats(userId: string): Promise<ProfileStats | null> {
     try {
       // Appel de la fonction RPC pour obtenir les stats de base
-      const { data: statsData, error: statsError } = await supabase
-        .rpc('get_user_stats', { p_user_id: userId });
+      const { data: statsData, error: statsError } = await supabase.rpc('get_user_stats', {
+        p_user_id: userId,
+      });
 
-      if (statsError) throw statsError;
+      if (statsError) {
+        throw statsError;
+      }
       if (!statsData || statsData.length === 0) {
         return {
           total_sessions: 0,
@@ -134,7 +141,9 @@ class ProfileService {
         .order('score', { ascending: false })
         .limit(1);
 
-      if (sessionsError) throw sessionsError;
+      if (sessionsError) {
+        throw sessionsError;
+      }
 
       // Calculer les jours consécutifs
       const { data: recentSessions, error: recentError } = await supabase
@@ -144,10 +153,12 @@ class ProfileService {
         .order('date_debut', { ascending: false })
         .limit(30);
 
-      if (recentError) throw recentError;
+      if (recentError) {
+        throw recentError;
+      }
 
       const joursConsecutifs = this.calculateConsecutiveDays(recentSessions || []);
-      const meilleurScore = sessionsData?.[0]?.score || 0;
+      const meilleurScore = sessionsData?.[0]?.score ?? 0;
 
       return {
         ...stats,
@@ -163,29 +174,31 @@ class ProfileService {
   /**
    * Calcule le nombre de jours consécutifs de pratique
    */
-  private calculateConsecutiveDays(sessions: any[]): number {
-    if (!sessions || sessions.length === 0) return 0;
+  private calculateConsecutiveDays(sessions: { created_at: string }[]): number {
+    if (!sessions || sessions.length === 0) {
+      return 0;
+    }
 
     const dates = sessions.map(s => new Date(s.date_debut).toDateString());
     const uniqueDates = [...new Set(dates)];
-    
+
     let consecutiveDays = 0;
-    let currentDate = new Date();
-    
+    const currentDate = new Date();
+
     for (let i = 0; i < uniqueDates.length; i++) {
       const sessionDate = new Date(uniqueDates[i]);
       const diffTime = Math.abs(currentDate.getTime() - sessionDate.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       if (diffDays <= i + 1) {
         consecutiveDays++;
       } else {
         break;
       }
-      
+
       currentDate.setDate(currentDate.getDate() - 1);
     }
-    
+
     return consecutiveDays;
   }
 
@@ -194,7 +207,9 @@ class ProfileService {
    */
   async getUserBadges(userId: string) {
     const stats = await this.getUserStats(userId);
-    if (!stats) return [];
+    if (!stats) {
+      return [];
+    }
 
     const badges = [];
 
@@ -267,20 +282,21 @@ class ProfileService {
   async deleteAccount(userId: string) {
     try {
       // Supprimer d'abord le profil (cascade supprimera les sessions, etc.)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+      const { error: profileError } = await supabase.from('profiles').delete().eq('id', userId);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        throw profileError;
+      }
 
       // Supprimer le compte auth
       const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-      
-      if (authError) throw authError;
+
+      if (authError) {
+        throw authError;
+      }
 
       return { success: true, error: null };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur lors de la suppression du compte:', error);
       return { success: false, error: error.message };
     }

@@ -1,0 +1,217 @@
+
+> casqueenmain@1.0.0 lint
+> eslint . --ext .ts,.tsx
+
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\components\progress\HistoryTab.tsx
+   46:9   warning  The 'fetchSessions' function makes the dependencies of useEffect Hook (at line 44) change on every render. Move it inside the useEffect callback. Alternatively, wrap the definition of 'fetchSessions' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  211:34  warning  Inline style: { color: '#FFFFFF' }                                                                                                                                                                                                     react-native/no-inline-styles
+  211:34  warning  Color literal: { color: '#FFFFFF' }                                                                                                                                                                                                    react-native/no-color-literals
+  221:37  warning  Inline style: { backgroundColor: '#10B981' }                                                                                                                                                                                           react-native/no-inline-styles
+  221:37  warning  Color literal: { backgroundColor: '#10B981' }                                                                                                                                                                                          react-native/no-color-literals
+  228:38  warning  Inline style: { color: '#FFFFFF' }                                                                                                                                                                                                     react-native/no-inline-styles
+  228:38  warning  Color literal: { color: '#FFFFFF' }                                                                                                                                                                                                    react-native/no-color-literals
+  238:36  warning  Inline style: { backgroundColor: '#EF4444' }                                                                                                                                                                                           react-native/no-inline-styles
+  238:36  warning  Color literal: { backgroundColor: '#EF4444' }                                                                                                                                                                                          react-native/no-color-literals
+  245:37  warning  Inline style: { color: '#FFFFFF' }                                                                                                                                                                                                     react-native/no-inline-styles
+  245:37  warning  Color literal: { color: '#FFFFFF' }                                                                                                                                                                                                    react-native/no-color-literals
+  463:17  warning  Color literal: { backgroundColor: 'rgba(0, 0, 0, 0.5)' }                                                                                                                                                                               react-native/no-color-literals
+  511:21  warning  Color literal: { color: '#FFFFFF' }                                                                                                                                                                                                    react-native/no-color-literals
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\components\progress\ObjectivesTab.tsx
+  177:51  warning  Inline style: { color: '#EF4444' }                                               react-native/no-inline-styles
+  177:51  warning  Color literal: { color: '#EF4444' }                                              react-native/no-color-literals
+  194:19  warning  Inline style: { backgroundColor: "isActive ? '#EF4444' : colors.border" }        react-native/no-inline-styles
+  194:19  warning  Color literal: { backgroundColor: "isActive ? '#EF4444' : colors.border" }       react-native/no-color-literals
+  239:27  warning  Inline style: { backgroundColor: "isCompleted ? '#10B981' : objective.color" }   react-native/no-inline-styles
+  239:27  warning  Color literal: { backgroundColor: "isCompleted ? '#10B981' : objective.color" }  react-native/no-color-literals
+  270:19  warning  Inline style: { opacity: 'badge.earned ? 1 : 0.7' }                              react-native/no-inline-styles
+  338:20  warning  Inline style: { height: 120 }                                                    react-native/no-inline-styles
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\components\progress\OverviewTab.tsx
+  103:23  error  'opacity' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  104:28  error  'opacity' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\components\progress\SegmentedControl.tsx
+  48:11  warning  Inline style: {
+  backgroundColor: "isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'",
+  borderColor: "isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)'"
+}                                                                                                                            react-native/no-inline-styles
+  48:11  warning  Color literal: {
+  backgroundColor: "isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'",
+  borderColor: "isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)'"
+}                                                                                                                           react-native/no-color-literals
+  74:17  warning  Inline style: {
+  color: 'selectedIndex === index\n' +
+    "                      ? '#FFFFFF'\n" +
+    '                      : isDark\n' +
+    '                        ? colors.text\n' +
+    '                        : colors.textSecondary',
+  fontWeight: "selectedIndex === index ? '600' : '400'"
+}  react-native/no-inline-styles
+  74:17  warning  Color literal: {
+  color: 'selectedIndex === index\n' +
+    "                      ? '#FFFFFF'\n" +
+    '                      : isDark\n' +
+    '                        ? colors.text\n' +
+    '                        : colors.textSecondary'
+}                                                          react-native/no-color-literals
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\components\progress\SubjectsTab.tsx
+  255:36  warning  Inline style: { fontWeight: 'bold' }  react-native/no-inline-styles
+  269:20  warning  Inline style: { height: 100 }         react-native/no-inline-styles
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\contexts\AuthContext.tsx
+  26:5  error  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\contexts\ThemeContext.tsx
+  24:5  error  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\navigation\MainNavigator.tsx
+  123:31  error  React Hook "useTheme" is called in function "_TrainingStackNavigator" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"  react-hooks/rules-of-hooks
+  188:31  error  React Hook "useTheme" is called in function "_ProfileStackNavigator" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"   react-hooks/rules-of-hooks
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\BadgesScreen.tsx
+   42:6   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   84:23  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+  161:35  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+  205:42  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+  262:48  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+  492:50  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\ForgotPasswordScreen.tsx
+   43:19  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  101:19  warning  Inline style: { opacity: 'loading ? 0.7 : 1' }  react-native/no-inline-styles
+  216:20  warning  Color literal: { color: '#FFFFFF' }             react-native/no-color-literals
+  249:26  warning  Color literal: { color: '#FFFFFF' }             react-native/no-color-literals
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\HomeScreen.tsx
+   40:50  error    Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+   42:50  error    Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+   61:6   warning  React Hook useEffect has a missing dependency: 'loadUserData'. Either include it or remove the dependency array                                                     react-hooks/exhaustive-deps
+   84:16  error    '_error' is defined but never used                                                                                                                                  @typescript-eslint/no-unused-vars
+  140:14  error    '_error' is defined but never used                                                                                                                                  @typescript-eslint/no-unused-vars
+  302:40  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+  302:58  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+  323:47  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+  323:65  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+  349:23  error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\LoginScreen.tsx
+   38:19  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   46:19  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  142:17  warning  Inline style: { opacity: 'loading ? 0.7 : 1' }  react-native/no-inline-styles
+  259:21  warning  Color literal: { color: '#FFFFFF' }             react-native/no-color-literals
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\ProfileCompleteScreen.tsx
+   31:41  error    'themeMode' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                @typescript-eslint/no-unused-vars
+   35:42  error    Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+   58:5   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  112:5   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  227:11  error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  248:32  warning  Inline style: { paddingBottom: 100 }                                                                                                                                react-native/no-inline-styles
+  451:57  warning  Inline style: { color: '#FFFFFF' }                                                                                                                                  react-native/no-inline-styles
+  451:57  warning  Color literal: { color: '#FFFFFF' }                                                                                                                                 react-native/no-color-literals
+  513:57  warning  Inline style: { color: '#FFFFFF' }                                                                                                                                  react-native/no-inline-styles
+  513:57  warning  Color literal: { color: '#FFFFFF' }                                                                                                                                 react-native/no-color-literals
+  574:17  warning  Color literal: { color: '#FFFFFF' }                                                                                                                                 react-native/no-color-literals
+  634:19  warning  Color literal: { backgroundColor: 'rgba(0, 0, 0, 0.5)' }                                                                                                            react-native/no-color-literals
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\ProfileScreen.tsx
+   14:3   error    'navigation' is defined but never used. Allowed unused args must match /^_/u                               @typescript-eslint/no-unused-vars
+   16:19  error    'isDark' is assigned a value but never used. Allowed unused vars must match /^_/u                          @typescript-eslint/no-unused-vars
+   36:29  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   36:44  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  126:19  error    Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+  132:17  error    Promise-returning function provided to property where a void return was expected                           @typescript-eslint/no-misused-promises
+  135:28  error    '__error' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\ProgressScreen.tsx
+   97:9   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  105:7   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  114:46  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+  116:45  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+  118:48  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\RegisterScreen.tsx
+  56:19  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  65:6   warning  React Hook React.useEffect has a missing dependency: 'clearError'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\RewardAnimationScreen.tsx
+   10:38  error    'SCREEN_HEIGHT' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                            @typescript-eslint/no-unused-vars
+   47:5   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  125:26  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+  214:65  error    Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\SessionReportScreen.tsx
+    4:3   error    'useRef' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                  @typescript-eslint/no-unused-vars
+   11:16  error    'SCREEN_WIDTH' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                   @typescript-eslint/no-unused-vars
+   61:80  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                 @typescript-eslint/prefer-nullish-coalescing
+   64:49  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                 @typescript-eslint/prefer-nullish-coalescing
+   93:6   warning  React Hook useEffect has missing dependencies: 'celebrationScale', 'isAbandoned', 'progressAnimation', 'starScale', 'triggerCelebration', and 'triggerEncouragement'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+   98:5   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator                                                        @typescript-eslint/no-floating-promises
+  106:5   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator                                                        @typescript-eslint/no-floating-promises
+  163:49  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                 @typescript-eslint/prefer-nullish-coalescing
+  178:73  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                 @typescript-eslint/prefer-nullish-coalescing
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\TrainingConfigScreen.tsx
+   83:5   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+   84:6   warning  React Hook useEffect has a missing dependency: 'checkPausedSession'. Either include it or remove the dependency array                                               react-hooks/exhaustive-deps
+   93:11  warning  Prefer using an optional chain expression instead, as it's more concise and easier to read                                                                          @typescript-eslint/prefer-optional-chain
+  246:13  error    Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+  254:7   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  260:7   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  367:44  error    Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+  444:86  error    Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\TrainingScreen.tsx
+   2:34  error  'ScrollView' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  85:40  error  Unexpected any. Specify a different type                                      @typescript-eslint/no-explicit-any
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\screens\TrainingSessionScreen.tsx
+   30:16  error    'screenWidth' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                              @typescript-eslint/no-unused-vars
+   62:60  error    Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+   77:5   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+   87:13  warning  Prefer using an optional chain expression instead, as it's more concise and easier to read                                                                          @typescript-eslint/prefer-optional-chain
+  149:11  error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  191:7   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  221:13  warning  Prefer using an optional chain expression instead, as it's more concise and easier to read                                                                          @typescript-eslint/prefer-optional-chain
+  296:11  error    Promise-returning function provided to property where a void return was expected                                                                                    @typescript-eslint/no-misused-promises
+  330:11  error    Promise-returning function provided to property where a void return was expected                                                                                    @typescript-eslint/no-misused-promises
+  508:21  error    Promise-returning function provided to attribute where a void return was expected                                                                                   @typescript-eslint/no-misused-promises
+  583:24  error    Promise-returning function provided to attribute where a void return was expected                                                                                   @typescript-eslint/no-misused-promises
+  776:64  error    Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+  820:21  error    Promise-returning function provided to attribute where a void return was expected                                                                                   @typescript-eslint/no-misused-promises
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\services\auth.ts
+   16:32  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   28:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   28:62  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   36:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  173:14  error    'error' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+  175:23  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\services\avatarService.ts
+  153:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\services\badgesService.ts
+  39:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\services\profileService.ts
+  161:54  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  177:46  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\services\progressService.ts
+    2:15  error  'Badge' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  218:36  error  Unexpected any. Specify a different type                                 @typescript-eslint/no-explicit-any
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\services\rankingService.ts
+  194:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\jonat\Desktop\Projet\CasqueEnMain\src\types\navigation.ts
+  3:15  error  'Badge' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  3:22  error  'Challenge' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  3:33  error  'Notification' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+✖ 135 problems (70 errors, 65 warnings)
+

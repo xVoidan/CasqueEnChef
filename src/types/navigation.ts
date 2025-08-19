@@ -1,4 +1,10 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
+// Types imported but used as unknown in navigation params from './app-types';
+import type {
+  Badge as _Badge,
+  Challenge as _Challenge,
+  Notification as _Notification,
+} from './app-types';
 import { StackScreenProps } from '@react-navigation/stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
@@ -24,7 +30,7 @@ export type HomeStackParamList = {
   HomeScreen: undefined;
   ProfileScreen: undefined;
   TrainingConfig: undefined;
-  TrainingSession: { 
+  TrainingSession: {
     themes: number[];
     sousThemes: number[];
     settings: {
@@ -39,10 +45,10 @@ export type HomeStackParamList = {
       };
     };
   };
-  SessionReport: { 
+  SessionReport: {
     sessionId: number;
-    stats: any;
-    sessionParams?: any;
+    stats: unknown;
+    sessionParams?: unknown;
     isAbandoned?: boolean;
   };
   RewardAnimation: {
@@ -56,7 +62,7 @@ export type HomeStackParamList = {
       rarity?: 'common' | 'rare' | 'epic' | 'legendary';
       points?: number;
     }>;
-    sessionStats: any;
+    sessionStats: unknown;
   };
   ReviewQuestions: {
     questions: Array<{
@@ -83,7 +89,7 @@ export type RankingStackParamList = {
 export type TrainingStackParamList = {
   TrainingList: undefined;
   TrainingConfig: undefined;
-  TrainingSession: { 
+  TrainingSession: {
     themes: number[];
     sousThemes: number[];
     settings: {
@@ -98,10 +104,10 @@ export type TrainingStackParamList = {
       };
     };
   };
-  SessionReport: { 
+  SessionReport: {
     sessionId: number;
-    stats: any;
-    sessionParams?: any;
+    stats: unknown;
+    sessionParams?: unknown;
     isAbandoned?: boolean;
   };
   RewardAnimation: {
@@ -115,7 +121,7 @@ export type TrainingStackParamList = {
       rarity?: 'common' | 'rare' | 'epic' | 'legendary';
       points?: number;
     }>;
-    sessionStats: any;
+    sessionStats: unknown;
   };
   ReviewQuestions: {
     questions: Array<{
@@ -142,29 +148,47 @@ export type ProfileStackParamList = {
   Settings: undefined;
 };
 
-export type RootStackScreenProps<T extends keyof RootStackParamList> = 
-  StackScreenProps<RootStackParamList, T>;
+export type RootStackScreenProps<T extends keyof RootStackParamList> = StackScreenProps<
+  RootStackParamList,
+  T
+>;
 
-export type AuthStackScreenProps<T extends keyof AuthStackParamList> = 
-  StackScreenProps<AuthStackParamList, T>;
+export type AuthStackScreenProps<T extends keyof AuthStackParamList> = StackScreenProps<
+  AuthStackParamList,
+  T
+>;
 
-export type MainTabScreenProps<T extends keyof MainTabParamList> = 
-  BottomTabScreenProps<MainTabParamList, T>;
+export type MainTabScreenProps<T extends keyof MainTabParamList> = BottomTabScreenProps<
+  MainTabParamList,
+  T
+>;
 
-export type HomeStackScreenProps<T extends keyof HomeStackParamList> = 
-  StackScreenProps<HomeStackParamList, T>;
+export type HomeStackScreenProps<T extends keyof HomeStackParamList> = StackScreenProps<
+  HomeStackParamList,
+  T
+>;
 
-export type TrainingStackScreenProps<T extends keyof TrainingStackParamList> = 
-  StackScreenProps<TrainingStackParamList, T>;
+export type TrainingStackScreenProps<T extends keyof TrainingStackParamList> = StackScreenProps<
+  TrainingStackParamList,
+  T
+>;
 
-export type RevisionStackScreenProps<T extends keyof RevisionStackParamList> = 
-  StackScreenProps<RevisionStackParamList, T>;
+export type RevisionStackScreenProps<T extends keyof RevisionStackParamList> = StackScreenProps<
+  RevisionStackParamList,
+  T
+>;
 
-export type ProgressStackScreenProps<T extends keyof ProgressStackParamList> = 
-  StackScreenProps<ProgressStackParamList, T>;
+export type ProgressStackScreenProps<T extends keyof ProgressStackParamList> = StackScreenProps<
+  ProgressStackParamList,
+  T
+>;
 
-export type RankingStackScreenProps<T extends keyof RankingStackParamList> = 
-  StackScreenProps<RankingStackParamList, T>;
+export type RankingStackScreenProps<T extends keyof RankingStackParamList> = StackScreenProps<
+  RankingStackParamList,
+  T
+>;
 
-export type ProfileStackScreenProps<T extends keyof ProfileStackParamList> = 
-  StackScreenProps<ProfileStackParamList, T>;
+export type ProfileStackScreenProps<T extends keyof ProfileStackParamList> = StackScreenProps<
+  ProfileStackParamList,
+  T
+>;

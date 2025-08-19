@@ -18,9 +18,11 @@ export const ProgressScreen = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [weeklyData, setWeeklyData] = useState({
     labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-    datasets: [{
-      data: [0, 0, 0, 0, 0, 0, 0],
-    }]
+    datasets: [
+      {
+        data: [0, 0, 0, 0, 0, 0, 0],
+      },
+    ],
   });
   const [totalStats, setTotalStats] = useState({
     totalSessions: 0,
@@ -34,41 +36,46 @@ export const ProgressScreen = () => {
   const segments = ['Global', 'Matières', 'Historique', 'Objectifs'];
 
   const fetchProgressData = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
 
     try {
       // Récupérer les performances hebdomadaires
       const weeklyPerformance = await progressService.getWeeklyPerformance(user.id);
-      
+
       // Récupérer les objectifs et badges pour les stats globales
       const objectives = await progressService.getUserObjectivesAndBadges(user.id);
-      
+
       if (weeklyPerformance && weeklyPerformance.length > 0) {
         // Transformer les données pour le graphique
         const weeklyScores = weeklyPerformance.map(day => day.score_moyen);
-        
+
         setWeeklyData({
           labels: weeklyPerformance.map(day => day.jour_nom),
-          datasets: [{
-            data: weeklyScores,
-          }]
+          datasets: [
+            {
+              data: weeklyScores,
+            },
+          ],
         });
       }
-      
+
       if (objectives) {
         // Récupérer les sessions détaillées pour calculer le meilleur score
         const sessions = await progressService.getUserSessionsDetailed(user.id, 100);
         let bestScore = 0;
-        
+
         if (sessions && sessions.length > 0) {
           bestScore = Math.max(...sessions.map(s => Number(s.score)));
         }
-        
+
         // Calculer la moyenne globale basée sur toutes les sessions
-        const globalAverage = sessions && sessions.length > 0
-          ? Math.round(sessions.reduce((acc, s) => acc + Number(s.score), 0) / sessions.length)
-          : 0;
-        
+        const globalAverage =
+          sessions && sessions.length > 0
+            ? Math.round(sessions.reduce((acc, s) => acc + Number(s.score), 0) / sessions.length)
+            : 0;
+
         setTotalStats({
           totalSessions: objectives.total_sessions,
           totalQuestions: objectives.total_questions,
@@ -87,7 +94,7 @@ export const ProgressScreen = () => {
   useFocusEffect(
     useCallback(() => {
       if (user) {
-        fetchProgressData();
+        void fetchProgressData();
       }
     }, [user, fetchProgressData])
   );
@@ -95,7 +102,7 @@ export const ProgressScreen = () => {
   // Charger aussi les données au montage initial
   useEffect(() => {
     if (user) {
-      fetchProgressData();
+      void fetchProgressData();
     }
   }, [user, fetchProgressData]);
 
@@ -104,11 +111,11 @@ export const ProgressScreen = () => {
       case 0:
         return <OverviewTab weeklyData={weeklyData} totalStats={totalStats} />;
       case 1:
-        return <SubjectsTab userId={user?.id || ''} />;
+        return <SubjectsTab userId={user?.id ?? ''} />;
       case 2:
-        return <HistoryTab userId={user?.id || ''} />;
+        return <HistoryTab userId={user?.id ?? ''} />;
       case 3:
-        return <ObjectivesTab userId={user?.id || ''} />;
+        return <ObjectivesTab userId={user?.id ?? ''} />;
       default:
         return <OverviewTab weeklyData={weeklyData} totalStats={totalStats} />;
     }
@@ -129,9 +136,7 @@ export const ProgressScreen = () => {
         onIndexChange={setSelectedIndex}
       />
 
-      <View style={styles.content}>
-        {renderContent()}
-      </View>
+      <View style={styles.content}>{renderContent()}</View>
     </SafeAreaView>
   );
 };

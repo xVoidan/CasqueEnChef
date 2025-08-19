@@ -23,8 +23,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<AuthError | null>(null);
 
   useEffect(() => {
-    checkCurrentUser();
-    
+    void checkCurrentUser();
+
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         setUser({
@@ -59,12 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
       const { user, error } = await authService.signUp(email, password, username);
-      
+
       if (error) {
         setError(error);
         throw new Error(error.message);
       }
-      
+
       if (user) {
         setUser(user);
       }
@@ -78,12 +78,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
       const { user, error } = await authService.signIn(email, password);
-      
+
       if (error) {
         setError(error);
         throw new Error(error.message);
       }
-      
+
       if (user) {
         setUser(user);
       }
@@ -97,12 +97,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
       const { error } = await authService.signOut();
-      
+
       if (error) {
         setError(error);
         throw new Error(error.message);
       }
-      
+
       setUser(null);
     } finally {
       setLoading(false);
@@ -114,12 +114,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
       const { user, error } = await authService.signInAsGuest();
-      
+
       if (error) {
         setError(error);
         throw new Error(error.message);
       }
-      
+
       if (user) {
         setUser(user);
       }
@@ -133,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
       const { error } = await authService.resetPassword(email);
-      
+
       if (error) {
         setError(error);
         throw new Error(error.message);
@@ -146,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshSession = async () => {
     try {
       const { error } = await authService.refreshSession();
-      
+
       if (error) {
         console.error('Error refreshing session:', error);
       }

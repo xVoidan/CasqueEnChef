@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   Switch,
   TextInput,
   ActivityIndicator,
-  Alert
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
+import type { Theme, SousTheme } from '../types/database';
 import { useAuth } from '../contexts/AuthContext';
 import { spacing, typography, borderRadius, shadows } from '../styles/theme';
 import { TrainingStackScreenProps } from '../types/navigation';
@@ -20,6 +21,9 @@ import { supabase } from '../config/supabase';
 import { sessionService } from '../services/sessionService';
 import { ButtonContainer } from '../components/ButtonContainer';
 import * as Haptics from 'expo-haptics';
+
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-native/no-color-literals */
 
 interface Theme {
   id: number;
@@ -53,7 +57,9 @@ interface SessionSettings {
   };
 }
 
-export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingConfig'>> = ({ navigation }) => {
+export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingConfig'>> = ({
+  navigation,
+}) => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -68,52 +74,53 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
       correct: 1,
       incorrect: -0.5,
       noAnswer: -0.5,
-      partial: 0.5
-    }
+      partial: 0.5,
+    },
   });
 
-  useEffect(() => {
-    checkPausedSession();
-    loadThemesAndQuestions();
-  }, []);
-
-  useEffect(() => {
-    setTimerInputValue(settings.timePerQuestion.toString());
-  }, [settings.timePerQuestion]);
-
-  const checkPausedSession = async () => {
+  const checkPausedSession = useCallback(async () => {
     if (user) {
       const pausedSession = await sessionService.getLocalSession(user.id);
-      if (pausedSession && pausedSession.isPaused) {
+      if (pausedSession?.isPaused) {
         Alert.alert(
           'Session en pause',
           'Vous avez une session en pause. Voulez-vous la reprendre ?',
           [
             { text: 'Non', style: 'cancel' },
-            { 
-              text: 'Reprendre', 
+            {
+              text: 'Reprendre',
               onPress: () => {
                 navigation.navigate('TrainingSession', {
                   themes: [],
                   sousThemes: [],
-                  settings: pausedSession.settings
+                  settings: pausedSession.settings,
                 });
-              }
-            }
+              },
+            },
           ]
         );
       }
     }
-  };
+  }, [user, navigation]);
+
+  useEffect(() => {
+    void checkPausedSession();
+    void loadThemesAndQuestions();
+  }, [checkPausedSession]);
+
+  useEffect(() => {
+    setTimerInputValue(settings.timePerQuestion.toString());
+  }, [settings.timePerQuestion]);
 
   const loadThemesAndQuestions = async () => {
     try {
       setLoading(true);
-      
+
       // Récupérer les thèmes et sous-thèmes
       const { data: themesData, error: themesError } = await supabase
         .from('themes')
-        .select(`
+        .select(
+          `
           id,
           nom,
           description,
@@ -124,11 +131,14 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             nom,
             description
           )
-        `)
+        `
+        )
         .eq('actif', true)
         .order('ordre');
 
-      if (themesError) throw themesError;
+      if (themesError) {
+        throw themesError;
+      }
 
       // Compter les questions pour chaque sous-thème
       const { data: questionsCount, error: countError } = await supabase
@@ -136,19 +146,22 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
         .select('sous_theme_id')
         .eq('actif', true);
 
-      if (countError) throw countError;
+      if (countError) {
+        throw countError;
+      }
 
       // Mapper les données
-      const formattedThemes = themesData?.map(theme => ({
-        ...theme,
-        isExpanded: false,
-        isSelected: false,
-        sous_themes: theme.sous_themes.map((st: any) => ({
-          ...st,
-          questionCount: questionsCount?.filter(q => q.sous_theme_id === st.id).length || 0,
-          isSelected: false
-        }))
-      })) || [];
+      const formattedThemes =
+        themesData?.map(theme => ({
+          ...theme,
+          isExpanded: false,
+          isSelected: false,
+          sous_themes: theme.sous_themes.map((st: unknown) => ({
+            ...st,
+            questionCount: questionsCount?.filter(q => q.sous_theme_id === st.id).length || 0,
+            isSelected: false,
+          })),
+        })) || [];
 
       setThemes(formattedThemes);
     } catch (error) {
@@ -160,51 +173,57 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
   };
 
   const toggleThemeExpansion = (themeId: number) => {
-    setThemes(prev => prev.map(theme => 
-      theme.id === themeId 
-        ? { ...theme, isExpanded: !theme.isExpanded }
-        : theme
-    ));
+    setThemes(prev =>
+      prev.map(theme =>
+        theme.id === themeId ? { ...theme, isExpanded: !theme.isExpanded } : theme
+      )
+    );
   };
 
   const toggleThemeSelection = (themeId: number) => {
-    setThemes(prev => prev.map(theme => 
-      theme.id === themeId 
-        ? { 
-            ...theme, 
-            isSelected: !theme.isSelected,
-            sous_themes: theme.sous_themes.map(st => ({
-              ...st,
-              isSelected: !theme.isSelected
-            }))
-          }
-        : theme
-    ));
+    setThemes(prev =>
+      prev.map(theme =>
+        theme.id === themeId
+          ? {
+              ...theme,
+              isSelected: !theme.isSelected,
+              sous_themes: theme.sous_themes.map(st => ({
+                ...st,
+                isSelected: !theme.isSelected,
+              })),
+            }
+          : theme
+      )
+    );
   };
 
   const toggleSousThemeSelection = (themeId: number, sousThemeId: number) => {
-    setThemes(prev => prev.map(theme => 
-      theme.id === themeId 
-        ? {
-            ...theme,
-            sous_themes: theme.sous_themes.map(st =>
-              st.id === sousThemeId 
-                ? { ...st, isSelected: !st.isSelected }
-                : st
-            ),
-            isSelected: theme.sous_themes.some(st => 
-              st.id === sousThemeId ? !st.isSelected : st.isSelected
-            )
-          }
-        : theme
-    ));
+    setThemes(prev =>
+      prev.map(theme =>
+        theme.id === themeId
+          ? {
+              ...theme,
+              sous_themes: theme.sous_themes.map(st =>
+                st.id === sousThemeId ? { ...st, isSelected: !st.isSelected } : st
+              ),
+              isSelected: theme.sous_themes.some(st =>
+                st.id === sousThemeId ? !st.isSelected : st.isSelected
+              ),
+            }
+          : theme
+      )
+    );
   };
 
   const getTotalQuestions = () => {
-    return themes.reduce((total, theme) => 
-      total + theme.sous_themes.reduce((subTotal, st) => 
-        subTotal + (st.isSelected ? st.questionCount : 0), 0
-      ), 0
+    return themes.reduce(
+      (total, theme) =>
+        total +
+        theme.sous_themes.reduce(
+          (subTotal, st) => subTotal + (st.isSelected ? st.questionCount : 0),
+          0
+        ),
+      0
     );
   };
 
@@ -212,11 +231,19 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
     return themes.filter(t => t.isSelected).length;
   };
 
-  const ScoreInput = ({ label, value, onValueChange, colors, step = 0.5, min = -10, max = 10 }: {
+  const ScoreInput = ({
+    label,
+    value,
+    onValueChange,
+    colors,
+    step = 0.5,
+    min = -10,
+    max = 10,
+  }: {
     label: string;
     value: number;
     onValueChange: (value: number) => void;
-    colors: any;
+    colors: { text: string; background: string; surface: string; primary: string; border: string };
     step?: number;
     min?: number;
     max?: number;
@@ -224,63 +251,63 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
     const handleDecrease = () => {
       const newValue = Math.max(min, Number((value - step).toFixed(1)));
       onValueChange(newValue);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     };
 
     const handleIncrease = () => {
       const newValue = Math.min(max, Number((value + step).toFixed(1)));
       onValueChange(newValue);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     };
 
     return (
       <View style={styles.scoringItem}>
-        <Text style={[styles.scoringLabel, { color: colors.textSecondary }]}>
-          {label}
-        </Text>
+        <Text style={[styles.scoringLabel, { color: colors.textSecondary }]}>{label}</Text>
         <View style={styles.scoreInputContainer}>
           <TouchableOpacity
             style={[
               styles.scoreButton,
-              { 
+              {
                 backgroundColor: value <= min ? colors.border : colors.primary,
-                opacity: value <= min ? 0.5 : 1
-              }
+                opacity: value <= min ? 0.5 : 1,
+              },
             ]}
             onPress={handleDecrease}
             disabled={value <= min}
             activeOpacity={0.7}
           >
-            <Ionicons 
-              name="remove" 
-              size={16} 
-              color={value <= min ? colors.textSecondary : '#FFF'} 
+            <Ionicons
+              name="remove"
+              size={16}
+              color={value <= min ? colors.textSecondary : '#FFF'}
             />
           </TouchableOpacity>
-          
-          <View style={[styles.scoreDisplay, { backgroundColor: colors.background, borderColor: colors.border }]}>
+
+          <View
+            style={[
+              styles.scoreDisplay,
+              { backgroundColor: colors.background, borderColor: colors.border },
+            ]}
+          >
             <Text style={[styles.scoreValue, { color: colors.text }]}>
-              {value >= 0 ? '+' : ''}{value.toFixed(1)}
+              {value >= 0 ? '+' : ''}
+              {value.toFixed(1)}
             </Text>
           </View>
-          
+
           <TouchableOpacity
             style={[
               styles.scoreButton,
-              { 
+              {
                 backgroundColor: value >= max ? colors.border : colors.primary,
-                opacity: value >= max ? 0.5 : 1
-              }
+                opacity: value >= max ? 0.5 : 1,
+              },
             ]}
             onPress={handleIncrease}
             disabled={value >= max}
             activeOpacity={0.7}
           >
-            <Ionicons 
-              name="add" 
-              size={16} 
-              color={value >= max ? colors.textSecondary : '#FFF'} 
-            />
+            <Ionicons name="add" size={16} color={value >= max ? colors.textSecondary : '#FFF'} />
           </TouchableOpacity>
         </View>
       </View>
@@ -289,7 +316,7 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
 
   const validateAndStart = () => {
     const totalQuestions = getTotalQuestions();
-    
+
     if (totalQuestions === 0) {
       Alert.alert('Sélection requise', 'Veuillez sélectionner au moins un thème ou sous-thème');
       return;
@@ -303,8 +330,10 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
     }
 
     // Navigation vers l'écran de session avec les paramètres
-    const selectedThemes = themes.filter(t => t.isSelected || t.sous_themes.some(st => st.isSelected));
-    const selectedSousThemes = selectedThemes.flatMap(t => 
+    const selectedThemes = themes.filter(
+      t => t.isSelected || t.sous_themes.some(st => st.isSelected)
+    );
+    const selectedSousThemes = selectedThemes.flatMap(t =>
       t.sous_themes.filter(st => st.isSelected).map(st => st.id)
     );
 
@@ -312,13 +341,13 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
     navigation.navigate('TrainingSession', {
       themes: selectedThemes.map(t => t.id),
       sousThemes: selectedSousThemes,
-      settings: settings
+      settings: settings,
     });
   };
 
   const renderThemeItem = (theme: Theme) => (
     <View key={theme.id} style={[styles.themeContainer, { backgroundColor: colors.surface }]}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.themeHeader}
         onPress={() => toggleThemeExpansion(theme.id)}
         activeOpacity={0.7}
@@ -328,16 +357,18 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             style={[
               styles.checkbox,
               { borderColor: colors.border },
-              theme.isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
+              theme.isSelected && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
             onPress={() => toggleThemeSelection(theme.id)}
           >
-            {theme.isSelected && (
-              <Ionicons name="checkmark" size={16} color={colors.surface} />
-            )}
+            {theme.isSelected && <Ionicons name="checkmark" size={16} color={colors.surface} />}
           </TouchableOpacity>
           <View style={[styles.themeIcon, { backgroundColor: `${theme.couleur}20` }]}>
-            <Ionicons name={theme.icone as any} size={20} color={theme.couleur} />
+            <Ionicons
+              name={theme.icone as keyof typeof Ionicons.glyphMap}
+              size={20}
+              color={theme.couleur}
+            />
           </View>
           <View style={styles.themeInfo}>
             <Text style={[styles.themeName, { color: colors.text }]}>{theme.nom}</Text>
@@ -346,10 +377,10 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             </Text>
           </View>
         </View>
-        <Ionicons 
-          name={theme.isExpanded ? "chevron-up" : "chevron-down"} 
-          size={20} 
-          color={colors.textSecondary} 
+        <Ionicons
+          name={theme.isExpanded ? 'chevron-up' : 'chevron-down'}
+          size={20}
+          color={colors.textSecondary}
         />
       </TouchableOpacity>
 
@@ -362,21 +393,23 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
               onPress={() => toggleSousThemeSelection(theme.id, sousTheme.id)}
               activeOpacity={0.7}
             >
-              <View style={[
-                styles.checkbox,
-                styles.sousThemeCheckbox,
-                { borderColor: colors.border },
-                sousTheme.isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
-              ]}
+              <View
+                style={[
+                  styles.checkbox,
+                  styles.sousThemeCheckbox,
+                  { borderColor: colors.border },
+                  sousTheme.isSelected && {
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary,
+                  },
+                ]}
               >
                 {sousTheme.isSelected && (
                   <Ionicons name="checkmark" size={14} color={colors.surface} />
                 )}
               </View>
               <View style={styles.sousThemeInfo}>
-                <Text style={[styles.sousThemeName, { color: colors.text }]}>
-                  {sousTheme.nom}
-                </Text>
+                <Text style={[styles.sousThemeName, { color: colors.text }]}>{sousTheme.nom}</Text>
                 <Text style={[styles.questionCount, { color: colors.textSecondary }]}>
                   {sousTheme.questionCount} questions
                 </Text>
@@ -396,7 +429,7 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
         </Text>
         <Switch
           value={settings.useDefaults}
-          onValueChange={(value) => setSettings(prev => ({ ...prev, useDefaults: value }))}
+          onValueChange={value => setSettings(prev => ({ ...prev, useDefaults: value }))}
           trackColor={{ false: colors.border, true: colors.primary }}
           thumbColor={colors.surface}
         />
@@ -405,20 +438,24 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
       {!settings.useDefaults && (
         <>
           <View style={styles.separator} />
-          
+
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Type de questions</Text>
           <View style={styles.radioGroup}>
             {['QCU', 'QCM', 'MIXTE'].map(type => (
               <TouchableOpacity
                 key={type}
                 style={styles.radioOption}
-                onPress={() => setSettings(prev => ({ ...prev, questionType: type as any }))}
+                onPress={() =>
+                  setSettings(prev => ({ ...prev, questionType: type as 'QCU' | 'QCM' | 'MIXTE' }))
+                }
               >
-                <View style={[
-                  styles.radio,
-                  { borderColor: colors.border },
-                  settings.questionType === type && { borderColor: colors.primary }
-                ]}>
+                <View
+                  style={[
+                    styles.radio,
+                    { borderColor: colors.border },
+                    settings.questionType === type && { borderColor: colors.primary },
+                  ]}
+                >
                   {settings.questionType === type && (
                     <View style={[styles.radioDot, { backgroundColor: colors.primary }]} />
                   )}
@@ -434,7 +471,7 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             <Text style={[styles.settingLabel, { color: colors.text }]}>Chronomètre</Text>
             <Switch
               value={settings.timerEnabled}
-              onValueChange={(value) => setSettings(prev => ({ ...prev, timerEnabled: value }))}
+              onValueChange={value => setSettings(prev => ({ ...prev, timerEnabled: value }))}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={colors.surface}
             />
@@ -446,11 +483,14 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
                 Temps par question (secondes)
               </Text>
               <TextInput
-                style={[styles.numberInput, { 
-                  color: colors.text, 
-                  borderColor: colors.border,
-                  backgroundColor: colors.background 
-                }]}
+                style={[
+                  styles.numberInput,
+                  {
+                    color: colors.text,
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                  },
+                ]}
                 value={timerInputValue}
                 onChangeText={setTimerInputValue}
                 onBlur={() => {
@@ -475,10 +515,10 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             <ScoreInput
               label="Bonne réponse"
               value={settings.scoring.correct}
-              onValueChange={(value) => 
-                setSettings(prev => ({ 
-                  ...prev, 
-                  scoring: { ...prev.scoring, correct: value }
+              onValueChange={value =>
+                setSettings(prev => ({
+                  ...prev,
+                  scoring: { ...prev.scoring, correct: value },
                 }))
               }
               colors={colors}
@@ -490,10 +530,10 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             <ScoreInput
               label="Mauvaise réponse"
               value={settings.scoring.incorrect}
-              onValueChange={(value) => 
-                setSettings(prev => ({ 
-                  ...prev, 
-                  scoring: { ...prev.scoring, incorrect: value }
+              onValueChange={value =>
+                setSettings(prev => ({
+                  ...prev,
+                  scoring: { ...prev.scoring, incorrect: value },
                 }))
               }
               colors={colors}
@@ -505,10 +545,10 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             <ScoreInput
               label="Sans réponse"
               value={settings.scoring.noAnswer}
-              onValueChange={(value) => 
-                setSettings(prev => ({ 
-                  ...prev, 
-                  scoring: { ...prev.scoring, noAnswer: value }
+              onValueChange={value =>
+                setSettings(prev => ({
+                  ...prev,
+                  scoring: { ...prev.scoring, noAnswer: value },
                 }))
               }
               colors={colors}
@@ -520,10 +560,10 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             <ScoreInput
               label="Réponse partielle"
               value={settings.scoring.partial}
-              onValueChange={(value) => 
-                setSettings(prev => ({ 
-                  ...prev, 
-                  scoring: { ...prev.scoring, partial: value }
+              onValueChange={value =>
+                setSettings(prev => ({
+                  ...prev,
+                  scoring: { ...prev.scoring, partial: value },
                 }))
               }
               colors={colors}
@@ -559,57 +599,39 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView 
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.statsBar, { backgroundColor: colors.surface }]}>
           <View style={styles.stat}>
             <Text style={[styles.statValue, { color: colors.primary }]}>
               {getSelectedThemesCount()}
             </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Thèmes
-            </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Thèmes</Text>
           </View>
           <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>
-              {getTotalQuestions()}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Questions
-            </Text>
+            <Text style={[styles.statValue, { color: colors.primary }]}>{getTotalQuestions()}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Questions</Text>
           </View>
         </View>
 
-        <Text style={[styles.sectionHeader, { color: colors.text }]}>
-          Sélection des thèmes
-        </Text>
+        <Text style={[styles.sectionHeader, { color: colors.text }]}>Sélection des thèmes</Text>
         {themes.map(renderThemeItem)}
 
-        <Text style={[styles.sectionHeader, { color: colors.text }]}>
-          Paramètres de session
-        </Text>
+        <Text style={[styles.sectionHeader, { color: colors.text }]}>Paramètres de session</Text>
         {renderSettings()}
       </ScrollView>
 
-      <ButtonContainer 
-        backgroundColor={colors.background} 
-        borderColor={colors.border}
-      >
+      <ButtonContainer backgroundColor={colors.background} borderColor={colors.border}>
         <TouchableOpacity
           style={[
             styles.startButton,
             { backgroundColor: colors.primary },
-            getTotalQuestions() === 0 && styles.disabledButton
+            getTotalQuestions() === 0 && styles.disabledButton,
           ]}
           onPress={validateAndStart}
           disabled={getTotalQuestions() === 0}
         >
-          <Text style={styles.startButtonText}>
-            Commencer l'entraînement
-          </Text>
+          <Text style={styles.startButtonText}>Commencer l'entraînement</Text>
           <Ionicons name="arrow-forward" size={20} color="#FFF" />
         </TouchableOpacity>
       </ButtonContainer>
