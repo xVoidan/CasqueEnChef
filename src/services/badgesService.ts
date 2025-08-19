@@ -168,8 +168,7 @@ class BadgesService {
         .upsert({
           profile_id: userId,
           defi_id: defiId,
-          progression_actuelle: progression,
-          complete: false
+          progression_actuelle: progression
         }, {
           onConflict: 'profile_id,defi_id'
         });
@@ -197,11 +196,10 @@ class BadgesService {
   // Marquer un défi comme complété
   private async completeChallenge(userId: string, defiId: number, points: number): Promise<void> {
     try {
-      // Mettre à jour le défi
+      // Mettre à jour le défi (marquer comme complété via la progression)
       await supabase
         .from('defis_utilisateur')
         .update({
-          complete: true,
           date_complete: new Date().toISOString(),
           points_gagnes: points
         })
@@ -209,12 +207,21 @@ class BadgesService {
         .eq('defi_id', defiId);
 
       // Ajouter les points au profil
-      await supabase
+      // D'abord récupérer les points actuels
+      const { data: currentProfile } = await supabase
         .from('profiles')
-        .update({
-          points_total: supabase.raw('points_total + ?', [points])
-        })
-        .eq('id', userId);
+        .select('points_total')
+        .eq('id', userId)
+        .single();
+
+      if (currentProfile) {
+        await supabase
+          .from('profiles')
+          .update({
+            points_total: currentProfile.points_total + points
+          })
+          .eq('id', userId);
+      }
 
       // Créer une notification
       const { data: defi } = await supabase

@@ -24,6 +24,14 @@ export interface Database {
           date_concours: string | null;
           objectif_quotidien: number;
           points_total: number;
+          objectif_temps: number;
+          objectif_reussite: number;
+          points_hebdo: number;
+          points_mensuel: number;
+          rang_actuel: number | null;
+          rang_precedent: number | null;
+          derniere_activite: string;
+          serie_actuelle: number;
           created_at: string;
           updated_at: string;
         };
@@ -37,6 +45,14 @@ export interface Database {
           date_concours?: string | null;
           objectif_quotidien?: number;
           points_total?: number;
+          objectif_temps?: number;
+          objectif_reussite?: number;
+          points_hebdo?: number;
+          points_mensuel?: number;
+          rang_actuel?: number | null;
+          rang_precedent?: number | null;
+          derniere_activite?: string;
+          serie_actuelle?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -50,6 +66,14 @@ export interface Database {
           date_concours?: string | null;
           objectif_quotidien?: number;
           points_total?: number;
+          objectif_temps?: number;
+          objectif_reussite?: number;
+          points_hebdo?: number;
+          points_mensuel?: number;
+          rang_actuel?: number | null;
+          rang_precedent?: number | null;
+          derniere_activite?: string;
+          serie_actuelle?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -302,6 +326,187 @@ export interface Database {
           created_at?: string;
         };
       };
+      badges: {
+        Row: {
+          id: number;
+          code: string;
+          nom: string;
+          description: string | null;
+          categorie: string;
+          niveau: number;
+          icone: string | null;
+          couleur: string;
+          points_requis: number;
+          actif: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          code: string;
+          nom: string;
+          description?: string | null;
+          categorie?: string;
+          niveau?: number;
+          icone?: string | null;
+          couleur?: string;
+          points_requis?: number;
+          actif?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          code?: string;
+          nom?: string;
+          description?: string | null;
+          categorie?: string;
+          niveau?: number;
+          icone?: string | null;
+          couleur?: string;
+          points_requis?: number;
+          actif?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      badges_utilisateur: {
+        Row: {
+          id: number;
+          profile_id: string;
+          badge_id: number;
+          date_obtention: string;
+          points_gagnes: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          profile_id: string;
+          badge_id: number;
+          date_obtention?: string;
+          points_gagnes?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          profile_id?: string;
+          badge_id?: number;
+          date_obtention?: string;
+          points_gagnes?: number;
+          created_at?: string;
+        };
+      };
+      defis: {
+        Row: {
+          id: number;
+          nom: string;
+          description: string | null;
+          type_defi: string;
+          objectif_valeur: number;
+          points_recompense: number;
+          icone: string | null;
+          couleur: string;
+          actif: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          nom: string;
+          description?: string | null;
+          type_defi?: string;
+          objectif_valeur?: number;
+          points_recompense?: number;
+          icone?: string | null;
+          couleur?: string;
+          actif?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          nom?: string;
+          description?: string | null;
+          type_defi?: string;
+          objectif_valeur?: number;
+          points_recompense?: number;
+          icone?: string | null;
+          couleur?: string;
+          actif?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      defis_utilisateur: {
+        Row: {
+          id: number;
+          profile_id: string;
+          defi_id: number;
+          progression_actuelle: number;
+          date_complete: string | null;
+          points_gagnes: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          profile_id: string;
+          defi_id: number;
+          progression_actuelle?: number;
+          date_complete?: string | null;
+          points_gagnes?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          profile_id?: string;
+          defi_id?: number;
+          progression_actuelle?: number;
+          date_complete?: string | null;
+          points_gagnes?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      notifications_recompenses: {
+        Row: {
+          id: number;
+          profile_id: string;
+          type_notification: string;
+          titre: string;
+          message: string;
+          icone: string | null;
+          couleur: string;
+          lu: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          profile_id: string;
+          type_notification?: string;
+          titre: string;
+          message: string;
+          icone?: string | null;
+          couleur?: string;
+          lu?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          profile_id?: string;
+          type_notification?: string;
+          titre?: string;
+          message?: string;
+          icone?: string | null;
+          couleur?: string;
+          lu?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {};
     Functions: {
@@ -364,6 +569,11 @@ export type Reponse = Tables<'reponses'>;
 export type Explication = Tables<'explications'>;
 export type Session = Tables<'sessions'>;
 export type ReponseUtilisateur = Tables<'reponses_utilisateur'>;
+export type Badge = Tables<'badges'>;
+export type BadgeUtilisateur = Tables<'badges_utilisateur'>;
+export type Defi = Tables<'defis'>;
+export type DefiUtilisateur = Tables<'defis_utilisateur'>;
+export type NotificationRecompense = Tables<'notifications_recompenses'>;
 
 // Types étendus avec relations
 export interface QuestionWithReponses extends Question {
