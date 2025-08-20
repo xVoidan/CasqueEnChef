@@ -7,11 +7,14 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 0",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix --max-warnings 0",
     "lint:strict": "eslint . --ext .ts,.tsx --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "type-check": "tsc --noEmit"
+    "check-types": "tsc --noEmit --strict",
+    "audit": "npm run check-types && npm run lint",
+    "audit:fix": "npm run check-types && npm run lint:fix && npm run lint",
+    "pre-commit": "npm run audit:fix && git add ."
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
