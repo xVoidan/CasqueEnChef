@@ -21,11 +21,11 @@ interface TableInfo {
 }
 
 async function testSupabaseAccess(): Promise<void> {
-  console.error('🔍 TEST D\'ACCÈS COMPLET À SUPABASE');
-  console.error('=' .repeat(60));
+  console.error("🔍 TEST D'ACCÈS COMPLET À SUPABASE");
+  console.error('='.repeat(60));
   console.error(`URL: ${SUPABASE_URL}`);
   console.error('Clé: SERVICE_ROLE (accès complet)');
-  console.error('=' .repeat(60));
+  console.error('='.repeat(60));
 
   // Tables à vérifier
   const tables = [
@@ -95,7 +95,7 @@ async function testSupabaseAccess(): Promise<void> {
 
   // Test lecture
   try {
-    const { data } = await supabase.from('categories').select('*').limit(1);
+    await supabase.from('categories').select('*').limit(1);
     console.error('✅ Lecture: OK');
   } catch {
     console.error('❌ Lecture: Échec');
@@ -103,7 +103,7 @@ async function testSupabaseAccess(): Promise<void> {
 
   // Test insertion
   try {
-    const testData = { nom: `Test_${Date.now()}`, description: 'Test d\'accès' };
+    const testData = { nom: `Test_${Date.now()}`, description: "Test d'accès" };
     const { error } = await supabase.from('categories').insert(testData);
     if (!error) {
       console.error('✅ Insertion: OK');
@@ -136,12 +136,12 @@ async function testSupabaseAccess(): Promise<void> {
   console.error('\n✨ CAPACITÉS DE RECONSTRUCTION:');
   console.error('-'.repeat(50));
   console.error('✅ Schema complet dans: supabase/backup/schema.sql');
-  console.error('✅ Scripts d\'initialisation disponibles');
+  console.error("✅ Scripts d'initialisation disponibles");
   console.error('✅ Données de test prêtes');
   console.error('✅ Accès SERVICE_ROLE actif');
   console.error('\n💡 Je peux recréer TOUT le projet Supabase avec:');
   console.error('   1. Les tables et relations');
-  console.error('   2. Les index d\'optimisation');
+  console.error("   2. Les index d'optimisation");
   console.error('   3. Les politiques RLS');
   console.error('   4. Les triggers et fonctions');
   console.error('   5. Les données initiales');
@@ -153,6 +153,6 @@ testSupabaseAccess()
   .then(() => {
     console.error('\n✅ Test terminé avec succès!');
   })
-  .catch((error) => {
+  .catch(error => {
     console.error('\n❌ Erreur fatale:', error);
   });

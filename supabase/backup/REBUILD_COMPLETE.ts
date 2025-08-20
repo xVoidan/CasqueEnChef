@@ -1,6 +1,6 @@
 /**
  * SCRIPT DE RECONSTRUCTION COMPLÈTE DE LA BASE SUPABASE
- * 
+ *
  * Ce script permet de recréer entièrement un projet Supabase depuis zéro
  * Utilisation: npx tsx supabase/backup/REBUILD_COMPLETE.ts
  */
@@ -61,9 +61,9 @@ async function backupExistingData(): Promise<void> {
 async function createAllTables(): Promise<void> {
   console.error('\n🔨 CRÉATION DES TABLES...');
 
-  // Lire le schema.sql
-  const schemaPath = path.join(__dirname, 'schema.sql');
-  const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
+  // Lire le schema.sql si besoin
+  // const schemaPath = path.join(__dirname, 'schema.sql');
+  // const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
 
   // Pour Supabase, il faut utiliser l'API SQL Editor ou créer les tables une par une
   // Ici on utilise une approche programmatique
@@ -79,7 +79,7 @@ async function createAllTables(): Promise<void> {
       }
     },
 
-    // 2. Entreprises  
+    // 2. Entreprises
     entreprises: async () => {
       const { error } = await supabase.from('entreprises').select('*').limit(0);
       if (error?.code === '42P01') {
@@ -102,7 +102,7 @@ async function createAllTables(): Promise<void> {
     // Continuer pour toutes les tables...
   };
 
-  for (const [name, checkFn] of Object.entries(tables)) {
+  for (const [_name, checkFn] of Object.entries(tables)) {
     await checkFn();
   }
 }
@@ -164,7 +164,9 @@ async function createDemoQuiz(entrepriseId: number): Promise<void> {
     .eq('nom', 'Sécurité')
     .single();
 
-  if (!securiteCategory) return;
+  if (!securiteCategory) {
+    return;
+  }
 
   const quiz = {
     titre: 'Quiz Sécurité - Introduction aux EPI',
@@ -177,11 +179,7 @@ async function createDemoQuiz(entrepriseId: number): Promise<void> {
     niveau_difficulte: 1,
   };
 
-  const { data: createdQuiz, error } = await supabase
-    .from('quiz')
-    .insert(quiz)
-    .select()
-    .single();
+  const { data: createdQuiz, error } = await supabase.from('quiz').insert(quiz).select().single();
 
   if (!error && createdQuiz) {
     console.error('✅ Quiz de démonstration créé');
@@ -297,9 +295,7 @@ async function verifySetup(): Promise<void> {
 
   let allGood = true;
   for (const table of requiredTables) {
-    const { count, error } = await supabase
-      .from(table)
-      .select('*', { count: 'exact', head: true });
+    const { count, error } = await supabase.from(table).select('*', { count: 'exact', head: true });
 
     if (error) {
       console.error(`❌ ${table}: Manquante`);
@@ -322,7 +318,7 @@ async function verifySetup(): Promise<void> {
 // ============================================
 async function rebuildComplete(): Promise<void> {
   console.error('🚀 RECONSTRUCTION COMPLÈTE DE LA BASE SUPABASE');
-  console.error('=' .repeat(60));
+  console.error('='.repeat(60));
 
   try {
     // 1. Sauvegarder les données existantes
