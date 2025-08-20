@@ -197,17 +197,28 @@ export function useSaveAnswer() {
         throw reponseError;
       }
 
+      // Récupérer la session actuelle pour mettre à jour les valeurs
+      const { data: currentSession } = await supabase
+        .from('sessions_quiz')
+        .select('*')
+        .eq('id', sessionId)
+        .single();
+
+      if (!currentSession) {
+        throw new Error('Session not found');
+      }
+
       // Mettre à jour la session
       const { data: sessionData, error: sessionError } = await supabase
         .from('sessions_quiz')
         .update({
-          score_actuel: supabase.raw('score_actuel + ?', [pointsGagnes]),
-          question_actuelle: supabase.raw('question_actuelle + 1'),
-          questions_repondues: supabase.raw('questions_repondues + 1'),
-          temps_passe: supabase.raw('temps_passe + ?', [tempsReponse]),
+          score_actuel: currentSession.score_actuel + pointsGagnes,
+          question_actuelle: currentSession.question_actuelle + 1,
+          questions_repondues: currentSession.questions_repondues + 1,
+          temps_passe: currentSession.temps_passe + tempsReponse,
           reponses_correctes: estCorrecte
-            ? supabase.raw('COALESCE(reponses_correctes, 0) + 1')
-            : supabase.raw('COALESCE(reponses_correctes, 0)'),
+            ? (currentSession.reponses_correctes ?? 0) + 1
+            : (currentSession.reponses_correctes ?? 0),
         })
         .eq('id', sessionId)
         .select()
@@ -242,11 +253,22 @@ export function useCompleteSession() {
 
   return useMutation({
     mutationFn: async (sessionId: number) => {
+      // Récupérer la session actuelle
+      const { data: currentSession } = await supabase
+        .from('sessions_quiz')
+        .select('score_actuel')
+        .eq('id', sessionId)
+        .single();
+
+      if (!currentSession) {
+        throw new Error('Session not found');
+      }
+
       const { data, error } = await supabase
         .from('sessions_quiz')
         .update({
           statut: 'termine',
-          score_final: supabase.raw('score_actuel'),
+          score_final: currentSession.score_actuel,
           completed_at: new Date().toISOString(),
         })
         .eq('id', sessionId)

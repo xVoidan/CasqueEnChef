@@ -2,7 +2,7 @@
  * Configuration React Query pour cache et optimisation
  */
 
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, NetworkMode } from '@tanstack/react-query';
 import NetInfo from '@react-native-community/netinfo';
 import { Platform } from 'react-native';
 
@@ -51,28 +51,21 @@ export const queryClient = new QueryClient({
  */
 export async function setupQueryClient(): Promise<void> {
   // Écouter les changements de connexion réseau
-  NetInfo.addEventListener(state => {
-    if (!state.isConnected) {
-      // Mettre en pause les requêtes si offline
-      queryClient.setDefaultOptions({
-        queries: {
-          networkMode: 'offline',
-        },
-        mutations: {
-          networkMode: 'offline',
-        },
-      });
-    } else {
-      // Reprendre les requêtes si online
-      queryClient.setDefaultOptions({
-        queries: {
-          networkMode: 'online',
-        },
-        mutations: {
-          networkMode: 'online',
-        },
-      });
-      // Refetch toutes les queries actives
+  NetInfo.addEventListener((state: { isConnected: boolean | null }) => {
+    const networkMode: NetworkMode = state.isConnected ? 'online' : 'always';
+
+    // Mettre à jour le mode réseau
+    queryClient.setDefaultOptions({
+      queries: {
+        networkMode,
+      },
+      mutations: {
+        networkMode,
+      },
+    });
+
+    // Refetch toutes les queries actives si reconnecté
+    if (state.isConnected) {
       void queryClient.refetchQueries();
     }
   });

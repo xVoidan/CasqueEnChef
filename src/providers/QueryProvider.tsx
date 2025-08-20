@@ -12,7 +12,7 @@ interface QueryProviderProps {
   children: React.ReactNode;
 }
 
-export function QueryProvider({ children }: QueryProviderProps): JSX.Element {
+export function QueryProvider({ children }: QueryProviderProps): React.ReactElement {
   useEffect(() => {
     // Configurer le client avec gestion offline
     void setupQueryClient();

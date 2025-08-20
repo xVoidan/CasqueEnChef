@@ -93,11 +93,24 @@ export function useQuizDetails(quizId: number | null) {
 
       // Trier les questions et réponses
       if (data?.questions) {
-        data.questions.sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
-        data.questions.forEach(q => {
+        interface QuestionWithReponses {
+          id: number;
+          ordre?: number;
+          reponses?: Array<{ ordre?: number }>;
+        }
+
+        (data.questions as QuestionWithReponses[]).sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
+        (data.questions as QuestionWithReponses[]).forEach(q => {
           if (q.reponses) {
             q.reponses.sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
           }
+        });
+      }
+
+      // Mettre en cache les questions individuellement
+      if (data?.questions) {
+        (data.questions as Array<{ id: number }>).forEach(question => {
+          queryClient.setQueryData(['question', question.id], question);
         });
       }
 
@@ -105,15 +118,6 @@ export function useQuizDetails(quizId: number | null) {
     },
     enabled: !!quizId,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    // Prefetch les questions séparément pour optimisation
-    onSuccess: data => {
-      if (data?.questions) {
-        // Mettre en cache les questions individuellement
-        data.questions.forEach(question => {
-          queryClient.setQueryData(['question', question.id], question);
-        });
-      }
-    },
   });
 }
 

@@ -4,7 +4,6 @@
 - Accès Supabase via SUPABASE_SERVICE_ROLE_KEY dans .env
 - Toujours analyser le projet au démarrage
 - Pas de fichiers .md d'explication, code uniquement
-- **ESLint en mode STRICT - AUCUNE erreur/warning toléré**
 
 ## Workflow
 
@@ -12,35 +11,19 @@
 ```bash
 npm run check-types
 npm run lint:fix  
-# Si des erreurs ESLint persistent après fix:
-# Les corriger manuellement jusqu'à 0 erreur/warning
 git add .
 git commit -m "feat: [description]"
 git push
 CORRECTIONS BUGS → Pas de push
 
 Corriger uniquement, pas de commit/push automatique
-Mais toujours valider avec ESLint strict
 
-ESLint Configuration Stricte
-Vérifier/créer .eslintrc.json avec règles strictes
-Audit Obligatoire
-AVANT CHAQUE COMMIT:
-bashnpm run check-types  # Doit passer à 100%
-npm run lint         # Doit afficher 0 errors, 0 warnings
-npm run lint:fix     # Correction auto
-npm run lint         # Revérifier: DOIT être 0/0
-Si erreurs persistent → Les corriger manuellement
-Ne JAMAIS commit avec des erreurs/warnings ESLint
 Optimisations Automatiques
 
-any → types spécifiques (OBLIGATOIRE)
+any → types spécifiques
 select(*) → select('colonnes')
-console.log → retirer (sauf console.error)
+console.log → retirer en prod
 Ajouter useCallback/useMemo si nécessaire
-Types de retour explicites sur toutes les fonctions
-Const au lieu de let quand possible
-=== au lieu de ==
 Indexer colonnes fréquemment requêtées
 N+1 queries → requêtes jointes
 
@@ -54,12 +37,11 @@ Run lint pour voir état actuel
 Tables/RLS/Functions Supabase
 Git log --oneline -10
 Vérifier schema.sql à jour
-Proposer optimisations prioritaires + corrections ESLint
+Proposer optimisations prioritaires
 
-Règle d'or
-Qualité > Rapidité
-
-Code 100% typé
-0 erreur ESLint
-0 warning ESLint
-Tests types passent
+RÈGLES STRICTES:
+1. Code only, pas de .md explicatifs
+2. ESLint STRICT: 0 erreur, 0 warning obligatoire
+3. feat: → audit complet + push | fix: → pas de push
+4. Maintenir supabase/backup/schema.sql à jour
+5. Types explicites partout, jamais de any

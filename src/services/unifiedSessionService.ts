@@ -401,7 +401,9 @@ export class UnifiedSessionService {
       // Trier les réponses
       const sortedData = data.map(question => ({
         ...question,
-        reponses: question.reponses.sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)),
+        reponses: question.reponses.sort(
+          (a: { ordre?: number }, b: { ordre?: number }) => (a.ordre ?? 0) - (b.ordre ?? 0)
+        ),
       }));
 
       return {

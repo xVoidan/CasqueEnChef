@@ -295,7 +295,7 @@ class ErrorService {
 
     try {
       Sentry.captureException(new Error(error.message), {
-        level: error.severity as Sentry.SeverityLevel,
+        level: error.severity as unknown as Sentry.SeverityLevel,
         tags: {
           type: error.type,
         },
