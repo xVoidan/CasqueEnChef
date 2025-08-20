@@ -1,6 +1,13 @@
--- Migration: Ajout des RLS policies pour sécuriser la base de données (VERSION CORRIGÉE)
+-- Migration: Ajout des RLS policies pour sécuriser la base de données (VERSION 2 - SANS ROLE)
 -- Date: 2025-08-20
--- Description: Mise en place des politiques de sécurité Row Level Security avec vérification d'existence
+-- Description: Mise en place des politiques de sécurité Row Level Security sans colonne role
+
+-- ============================================
+-- OPTIONNEL: AJOUTER LA GESTION DES ADMINS
+-- ============================================
+-- Si vous souhaitez ajouter la gestion des admins, décommentez ces lignes:
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
+-- UPDATE public.profiles SET is_admin = true WHERE username = 'AdminJo'; -- Remplacer par votre admin
 
 -- ============================================
 -- ACTIVATION RLS SUR TOUTES LES TABLES
@@ -37,6 +44,7 @@ END $$;
 DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Service role can manage profiles" ON public.profiles;
 
 -- Les utilisateurs peuvent voir leur propre profil
 CREATE POLICY "Users can view own profile" ON public.profiles
@@ -46,14 +54,9 @@ CREATE POLICY "Users can view own profile" ON public.profiles
 CREATE POLICY "Users can update own profile" ON public.profiles
     FOR UPDATE USING (auth.uid() = id);
 
--- Les admins peuvent tout voir
-CREATE POLICY "Admins can view all profiles" ON public.profiles
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
+-- Service role peut tout faire (pour les fonctions backend)
+CREATE POLICY "Service role can manage profiles" ON public.profiles
+    FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
 -- POLICIES POUR LA TABLE ENTREPRISES
@@ -61,19 +64,15 @@ CREATE POLICY "Admins can view all profiles" ON public.profiles
 
 DROP POLICY IF EXISTS "Anyone can view active entreprises" ON public.entreprises;
 DROP POLICY IF EXISTS "Only admins can manage entreprises" ON public.entreprises;
+DROP POLICY IF EXISTS "Service role can manage entreprises" ON public.entreprises;
 
 -- Tout le monde peut voir les entreprises actives
 CREATE POLICY "Anyone can view active entreprises" ON public.entreprises
     FOR SELECT USING (actif = true);
 
--- Seuls les admins peuvent modifier
-CREATE POLICY "Only admins can manage entreprises" ON public.entreprises
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
+-- Service role peut tout gérer
+CREATE POLICY "Service role can manage entreprises" ON public.entreprises
+    FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
 -- POLICIES POUR LA TABLE CATEGORIES
@@ -81,19 +80,15 @@ CREATE POLICY "Only admins can manage entreprises" ON public.entreprises
 
 DROP POLICY IF EXISTS "Anyone can view categories" ON public.categories;
 DROP POLICY IF EXISTS "Only admins can manage categories" ON public.categories;
+DROP POLICY IF EXISTS "Service role can manage categories" ON public.categories;
 
 -- Tout le monde peut voir les catégories
 CREATE POLICY "Anyone can view categories" ON public.categories
     FOR SELECT USING (true);
 
--- Seuls les admins peuvent modifier
-CREATE POLICY "Only admins can manage categories" ON public.categories
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
+-- Service role peut tout gérer
+CREATE POLICY "Service role can manage categories" ON public.categories
+    FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
 -- POLICIES POUR LA TABLE QUIZ
@@ -101,6 +96,7 @@ CREATE POLICY "Only admins can manage categories" ON public.categories
 
 DROP POLICY IF EXISTS "View public or company quiz" ON public.quiz;
 DROP POLICY IF EXISTS "Admins can manage all quiz" ON public.quiz;
+DROP POLICY IF EXISTS "Service role can manage quiz" ON public.quiz;
 
 -- Voir les quiz publics ou de son entreprise
 CREATE POLICY "View public or company quiz" ON public.quiz
@@ -109,17 +105,13 @@ CREATE POLICY "View public or company quiz" ON public.quiz
         entreprise_id IN (
             SELECT entreprise_id FROM public.profiles
             WHERE id = auth.uid()
-        )
+        ) OR
+        entreprise_id IS NULL  -- Quiz sans entreprise assignée
     );
 
--- Admins peuvent tout gérer
-CREATE POLICY "Admins can manage all quiz" ON public.quiz
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
+-- Service role peut tout gérer
+CREATE POLICY "Service role can manage quiz" ON public.quiz
+    FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
 -- POLICIES POUR LA TABLE QUESTIONS
@@ -127,6 +119,7 @@ CREATE POLICY "Admins can manage all quiz" ON public.quiz
 
 DROP POLICY IF EXISTS "View questions from accessible quiz" ON public.questions;
 DROP POLICY IF EXISTS "Admins can manage questions" ON public.questions;
+DROP POLICY IF EXISTS "Service role can manage questions" ON public.questions;
 
 -- Voir les questions des quiz accessibles
 CREATE POLICY "View questions from accessible quiz" ON public.questions
@@ -137,18 +130,15 @@ CREATE POLICY "View questions from accessible quiz" ON public.questions
             entreprise_id IN (
                 SELECT entreprise_id FROM public.profiles
                 WHERE id = auth.uid()
-            )
-        )
+            ) OR
+            entreprise_id IS NULL
+        ) OR
+        quiz_id IS NULL  -- Questions non assignées (pour compatibilité)
     );
 
--- Admins peuvent tout gérer
-CREATE POLICY "Admins can manage questions" ON public.questions
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
+-- Service role peut tout gérer
+CREATE POLICY "Service role can manage questions" ON public.questions
+    FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
 -- POLICIES POUR LA TABLE REPONSES
@@ -156,29 +146,27 @@ CREATE POLICY "Admins can manage questions" ON public.questions
 
 DROP POLICY IF EXISTS "View answers from accessible questions" ON public.reponses;
 DROP POLICY IF EXISTS "Admins can manage answers" ON public.reponses;
+DROP POLICY IF EXISTS "Service role can manage answers" ON public.reponses;
 
 -- Voir les réponses des questions accessibles
 CREATE POLICY "View answers from accessible questions" ON public.reponses
     FOR SELECT USING (
         question_id IN (
             SELECT id FROM public.questions q
-            JOIN public.quiz qz ON q.quiz_id = qz.id
+            LEFT JOIN public.quiz qz ON q.quiz_id = qz.id
             WHERE qz.est_public = true OR
             qz.entreprise_id IN (
                 SELECT entreprise_id FROM public.profiles
                 WHERE id = auth.uid()
-            )
+            ) OR
+            qz.entreprise_id IS NULL OR
+            q.quiz_id IS NULL
         )
     );
 
--- Admins peuvent tout gérer
-CREATE POLICY "Admins can manage answers" ON public.reponses
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
+-- Service role peut tout gérer
+CREATE POLICY "Service role can manage answers" ON public.reponses
+    FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
 -- POLICIES POUR LA TABLE SESSIONS_QUIZ
@@ -187,6 +175,7 @@ CREATE POLICY "Admins can manage answers" ON public.reponses
 DROP POLICY IF EXISTS "Users can view own sessions" ON public.sessions_quiz;
 DROP POLICY IF EXISTS "Users can create own sessions" ON public.sessions_quiz;
 DROP POLICY IF EXISTS "Users can update own sessions" ON public.sessions_quiz;
+DROP POLICY IF EXISTS "Service role can manage sessions" ON public.sessions_quiz;
 
 -- Les utilisateurs ne voient que leurs propres sessions
 CREATE POLICY "Users can view own sessions" ON public.sessions_quiz
@@ -200,12 +189,17 @@ CREATE POLICY "Users can create own sessions" ON public.sessions_quiz
 CREATE POLICY "Users can update own sessions" ON public.sessions_quiz
     FOR UPDATE USING (user_id = auth.uid());
 
+-- Service role peut tout gérer
+CREATE POLICY "Service role can manage sessions" ON public.sessions_quiz
+    FOR ALL USING (auth.role() = 'service_role');
+
 -- ============================================
 -- POLICIES POUR LA TABLE REPONSES_UTILISATEUR
 -- ============================================
 
 DROP POLICY IF EXISTS "Users can view own answers" ON public.reponses_utilisateur;
 DROP POLICY IF EXISTS "Users can create own answers" ON public.reponses_utilisateur;
+DROP POLICY IF EXISTS "Service role can manage user answers" ON public.reponses_utilisateur;
 
 -- Les utilisateurs ne voient que leurs propres réponses
 CREATE POLICY "Users can view own answers" ON public.reponses_utilisateur
@@ -225,6 +219,10 @@ CREATE POLICY "Users can create own answers" ON public.reponses_utilisateur
         )
     );
 
+-- Service role peut tout gérer
+CREATE POLICY "Service role can manage user answers" ON public.reponses_utilisateur
+    FOR ALL USING (auth.role() = 'service_role');
+
 -- ============================================
 -- POLICIES POUR LES TABLES DE GAMIFICATION (si elles existent)
 -- ============================================
@@ -234,27 +232,41 @@ BEGIN
     -- Experience levels
     IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'experience_levels') THEN
         DROP POLICY IF EXISTS "Anyone can view experience levels" ON public.experience_levels;
+        DROP POLICY IF EXISTS "Service role can manage experience levels" ON public.experience_levels;
+        
         CREATE POLICY "Anyone can view experience levels" ON public.experience_levels
             FOR SELECT USING (true);
+            
+        CREATE POLICY "Service role can manage experience levels" ON public.experience_levels
+            FOR ALL USING (auth.role() = 'service_role');
     END IF;
     
     -- Achievements
     IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'achievements') THEN
         DROP POLICY IF EXISTS "Anyone can view achievements" ON public.achievements;
+        DROP POLICY IF EXISTS "Service role can manage achievements" ON public.achievements;
+        
         CREATE POLICY "Anyone can view achievements" ON public.achievements
             FOR SELECT USING (true);
+            
+        CREATE POLICY "Service role can manage achievements" ON public.achievements
+            FOR ALL USING (auth.role() = 'service_role');
     END IF;
     
     -- User achievements
     IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_achievements') THEN
         DROP POLICY IF EXISTS "Users can view own achievements" ON public.user_achievements;
         DROP POLICY IF EXISTS "System can grant achievements" ON public.user_achievements;
+        DROP POLICY IF EXISTS "Service role can manage user achievements" ON public.user_achievements;
         
         CREATE POLICY "Users can view own achievements" ON public.user_achievements
             FOR SELECT USING (user_id = auth.uid());
             
         CREATE POLICY "System can grant achievements" ON public.user_achievements
             FOR INSERT WITH CHECK (user_id = auth.uid());
+            
+        CREATE POLICY "Service role can manage user achievements" ON public.user_achievements
+            FOR ALL USING (auth.role() = 'service_role');
     END IF;
 END $$;
 
@@ -276,3 +288,13 @@ CREATE INDEX IF NOT EXISTS idx_questions_quiz_id ON public.questions(quiz_id);
 
 -- Index pour les réponses utilisateur
 CREATE INDEX IF NOT EXISTS idx_reponses_user_session ON public.reponses_utilisateur(session_id);
+
+-- ============================================
+-- MESSAGE FINAL
+-- ============================================
+DO $$
+BEGIN
+    RAISE NOTICE '✅ RLS Policies appliquées avec succès!';
+    RAISE NOTICE '📝 Note: Pour ajouter des admins, décommentez les lignes au début du fichier';
+    RAISE NOTICE '🔒 Les tables sont maintenant sécurisées avec Row Level Security';
+END $$;
