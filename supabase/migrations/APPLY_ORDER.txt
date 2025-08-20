@@ -1,0 +1,21 @@
+ORDRE D'APPLICATION DES MIGRATIONS CORRIGÉES
+=============================================
+
+Appliquer dans l'éditeur SQL de Supabase dans cet ordre:
+
+1. 20250820_add_rls_policies_fixed.sql
+   - Active RLS sur toutes les tables
+   - Supprime et recrée les policies avec DROP IF EXISTS
+   - Ajoute les index de performance
+
+2. 20250820_optimize_quiz_queries_fixed.sql
+   - Crée la vue matérialisée sans utiliser points_total
+   - Calcule points_total_calcule depuis les questions
+   - Ajoute les fonctions d'optimisation
+   - Configure le refresh automatique du cache
+
+NOTES IMPORTANTES:
+- Les fichiers "_fixed" remplacent les versions originales
+- Utiliser points_total_calcule au lieu de points_total dans le code
+- La vue matérialisée se rafraîchit automatiquement après modifications
+- Pour forcer un refresh manuel: SELECT refresh_quiz_cache();

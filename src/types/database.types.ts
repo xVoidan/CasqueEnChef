@@ -456,7 +456,7 @@ export interface Database {
           nombre_questions: number;
           est_public: boolean;
           niveau_difficulte: number;
-          points_total: number;
+          points_total_calcule: number;
           created_at: string;
           updated_at: string;
           questions_count: number;
