@@ -1,7 +1,14 @@
 import { DefaultTheme } from '@react-navigation/native';
 
 export const createNavigationTheme = (
-  colors: { primary: string; surface: string; text: string; border: string; textSecondary: string; background: string },
+  colors: {
+    primary: string;
+    surface: string;
+    text: string;
+    border: string;
+    textSecondary: string;
+    background: string;
+  },
   isDark: boolean
 ) => ({
   ...DefaultTheme,

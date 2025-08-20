@@ -44,6 +44,13 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
     showExplanation: true,
     timerEnabled: false,
     timeLimit: 30,
+    timePerQuestion: 60,
+    scoring: {
+      correct: 1,
+      incorrect: -0.5,
+      noAnswer: -0.5,
+      partial: 0.5,
+    },
   };
   const { sousThemes = [], settings = defaultSettings } = route.params || {};
 
@@ -159,7 +166,11 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
 
   const handleValidate = async () => {
     // Calculer le score
-    const result = sessionService.calculateScore(currentQuestion, selectedAnswers, settings);
+    const sessionSettings = {
+      ...defaultSettings,
+      ...settings,
+    };
+    const result = sessionService.calculateScore(currentQuestion, selectedAnswers, sessionSettings);
 
     // Créer la réponse utilisateur
     const userAnswer: UserAnswer = {
@@ -273,11 +284,11 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
         }
       } else {
         // En cas d'erreur, retour simple
-        navigation.navigate('HomeScreen');
+        navigation.navigate('TrainingList');
       }
     } else {
       // Si pas de données de session, retour simple
-      navigation.navigate('HomeScreen');
+      navigation.navigate('TrainingList');
     }
   };
 
@@ -300,7 +311,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
           onPress: () => {
             void (async () => {
               if (!user) {
-                navigation.navigate('HomeScreen');
+                navigation.navigate('TrainingList');
                 return;
               }
 
@@ -322,10 +333,10 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
                     isAbandoned: true,
                   });
                 } else {
-                  navigation.navigate('HomeScreen');
+                  navigation.navigate('TrainingList');
                 }
               } else {
-                navigation.navigate('HomeScreen');
+                navigation.navigate('TrainingList');
               }
             })();
           },
@@ -338,7 +349,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
               if (user) {
                 await sessionService.endSession(user.id, sessionId, 'abandonnee');
               }
-              navigation.navigate('HomeScreen');
+              navigation.navigate('TrainingList');
             })();
           },
         },
@@ -369,9 +380,8 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
     if (nextIndex < questions.length) {
       setNextQuestionData({
         question: questions[nextIndex],
-        selectedAnswers: [],
-        showCorrection: false,
-        showExplanation: false,
+        answers: [],
+        correctAnswer: '',
       });
 
       // Pré-positionner la nouvelle question plus proche pour réduire le trajet
@@ -422,7 +432,12 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
     });
   };
 
-  const renderAnswer = (answer: { id: number; lettre: string; est_correcte: boolean }) => {
+  const renderAnswer = (answer: {
+    id: number;
+    lettre: string;
+    texte: string;
+    est_correcte: boolean;
+  }) => {
     const isSelected = selectedAnswers.includes(answer.id);
     const isCorrect = answer.est_correcte;
 
@@ -531,7 +546,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
                   await sessionService.saveSessionLocally(user.id, sessionData);
                 }
                 setIsPaused(false);
-                navigation.navigate('HomeScreen');
+                navigation.navigate('TrainingList');
               })();
             }}
           >
@@ -783,7 +798,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
               </View>
 
               {/* Réponses de la nouvelle question */}
-              {nextQuestionData.question.reponses.map((answer: { id: string; texte: string }) => (
+              {nextQuestionData.question.reponses.map(answer => (
                 <View
                   key={answer.id}
                   style={[

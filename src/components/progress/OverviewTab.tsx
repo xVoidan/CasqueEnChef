@@ -8,8 +8,17 @@ import { shadows, borderRadius } from '../../styles/theme';
 
 const { width } = Dimensions.get('window');
 
+interface LineChartData {
+  labels: string[];
+  datasets: {
+    data: number[];
+    color?: (opacity: number) => string;
+    strokeWidth?: number;
+  }[];
+}
+
 interface OverviewTabProps {
-  weeklyData: { name: string; value: number; color: string; percentage: number };
+  weeklyData: LineChartData;
   totalStats: {
     totalSessions: number;
     totalQuestions: number;

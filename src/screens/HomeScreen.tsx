@@ -65,6 +65,7 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
   const { user } = useAuth();
   const [userProfile, setUserProfile] = useState<{
     nom_complet?: string;
+    username?: string;
     points_total?: number;
     serie_actuelle?: number;
     rang_actuel?: number;
@@ -75,6 +76,8 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
     date_session?: string;
     score?: number;
     temps_total?: number;
+    nombre_reponses_correctes?: number;
+    nombre_questions?: number;
   } | null>(null);
   const [weeklyStats, setWeeklyStats] = useState({ sessions: 0, correctRate: 0, streak: 0 });
   const [tips, setTips] = useState<Tip[]>([]);
@@ -391,7 +394,9 @@ export const HomeScreen: React.FC<HomeStackScreenProps<'HomeScreen'>> = ({ navig
                   style={styles.cardWrapper}
                 >
                   <LinearGradient
-                    colors={card.available ? card.colors : ['#9CA3AF', '#6B7280']}
+                    colors={
+                      (card.available ? card.colors : ['#9CA3AF', '#6B7280']) as [string, string]
+                    }
                     style={[styles.trainingCard, !card.available && styles.disabledCard]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}

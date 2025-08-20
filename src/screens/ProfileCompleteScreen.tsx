@@ -35,11 +35,13 @@ export const ProfileCompleteScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [profile, setProfile] = useState<{
     nom_complet?: string;
+    username?: string;
     email?: string;
     numero_permis?: string;
     date_naissance?: string;
     objectif_temps?: string;
     objectif_reussite?: number;
+    concours_type?: string;
   } | null>(null);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
@@ -183,8 +185,8 @@ export const ProfileCompleteScreen: React.FC = () => {
         }
       }
       setEditModalVisible(false);
-    } catch (error: Error) {
-      Alert.alert('Erreur', error.message);
+    } catch (error) {
+      Alert.alert('Erreur', error instanceof Error ? error.message : 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
@@ -218,8 +220,8 @@ export const ProfileCompleteScreen: React.FC = () => {
         setConfirmPassword('');
         setCurrentPassword('');
       }
-    } catch (error: Error) {
-      Alert.alert('Erreur', error.message);
+    } catch (error) {
+      Alert.alert('Erreur', error instanceof Error ? error.message : 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }

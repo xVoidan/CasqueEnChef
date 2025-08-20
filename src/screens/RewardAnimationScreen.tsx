@@ -2,21 +2,16 @@ import React, {
   /* eslint-disable react-hooks/exhaustive-deps, react-native/no-inline-styles, react-native/no-color-literals */ useEffect,
   useState,
 } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import Animated, {
   FadeIn,
+  SlideInUp,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   withSequence,
   withDelay,
+  withTiming,
   interpolate,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -45,6 +40,8 @@ export const RewardAnimationScreen: React.FC<TrainingStackScreenProps<'RewardAni
 }) => {
   const { colors } = useTheme();
   const { rewards = [], sessionStats } = route.params || {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sessionId = (sessionStats as any)?.sessionId ?? 0;
   const [currentRewardIndex, setCurrentRewardIndex] = useState(0);
   const [showingReward, setShowingReward] = useState(true);
 
@@ -100,6 +97,7 @@ export const RewardAnimationScreen: React.FC<TrainingStackScreenProps<'RewardAni
     } else {
       // Naviguer vers l'écran de rapport avec les stats
       navigation.replace('SessionReport', {
+        sessionId,
         stats: sessionStats,
         isAbandoned: false,
       });
@@ -108,6 +106,7 @@ export const RewardAnimationScreen: React.FC<TrainingStackScreenProps<'RewardAni
 
   const handleSkipAll = () => {
     navigation.replace('SessionReport', {
+      sessionId,
       stats: sessionStats,
       isAbandoned: false,
     });
@@ -165,6 +164,7 @@ export const RewardAnimationScreen: React.FC<TrainingStackScreenProps<'RewardAni
   if (!currentReward) {
     // Si pas de récompenses, aller directement au rapport
     navigation.replace('SessionReport', {
+      sessionId,
       stats: sessionStats,
       isAbandoned: false,
     });
@@ -225,7 +225,7 @@ export const RewardAnimationScreen: React.FC<TrainingStackScreenProps<'RewardAni
             {/* Badge/Icône de récompense */}
             <Animated.View style={[styles.rewardCard, rewardAnimatedStyle]}>
               <LinearGradient
-                colors={getRarityColor(currentReward.rarity)}
+                colors={getRarityColor(currentReward.rarity) as [string, string]}
                 style={styles.rewardGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}

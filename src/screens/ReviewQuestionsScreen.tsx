@@ -132,7 +132,7 @@ export const ReviewQuestionsScreen: React.FC<TrainingStackScreenProps<'ReviewQue
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('HomeScreen')}
+            onPress={() => navigation.getParent()?.navigate('Home', { screen: 'HomeScreen' })}
             style={[styles.secondaryButton, { borderColor: colors.border }]}
             activeOpacity={0.7}
           >

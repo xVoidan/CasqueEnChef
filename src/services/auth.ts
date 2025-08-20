@@ -13,7 +13,8 @@ export interface AuthError {
   code?: string;
 }
 
-const translateError = (error: { message?: string }): string => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const translateError = (error: { message?: string; error_description?: string } | any): string => {
   const errorMessages: { [key: string]: string } = {
     'Invalid login credentials': 'Email ou mot de passe incorrect',
     'Email not confirmed': 'Veuillez confirmer votre email',
@@ -155,7 +156,7 @@ class AuthService {
     }
   }
 
-  async signInAsGuest(): Promise<{ user: AuthUser; error: AuthError | null }> {
+  async signInAsGuest(): Promise<{ user: AuthUser | null; error: AuthError | null }> {
     try {
       const guestUser: AuthUser = {
         id: 'guest',

@@ -12,11 +12,20 @@ import { ObjectivesTab } from '../components/progress/ObjectivesTab';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 
+interface LineChartData {
+  labels: string[];
+  datasets: {
+    data: number[];
+    color?: (opacity: number) => string;
+    strokeWidth?: number;
+  }[];
+}
+
 export const ProgressScreen = () => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [weeklyData, setWeeklyData] = useState({
+  const [weeklyData, setWeeklyData] = useState<LineChartData>({
     labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
     datasets: [
       {

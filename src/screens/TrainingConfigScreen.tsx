@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
-import type { Theme, SousTheme } from '../types/database';
+import type { Theme as DBTheme, SousTheme as DBSousTheme } from '../types/database';
 import { useAuth } from '../contexts/AuthContext';
 import { spacing, typography, borderRadius, shadows } from '../styles/theme';
 import { TrainingStackScreenProps } from '../types/navigation';
@@ -25,21 +25,13 @@ import * as Haptics from 'expo-haptics';
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react-native/no-color-literals */
 
-interface Theme {
-  id: number;
-  nom: string;
-  description: string;
-  couleur: string;
-  icone: string;
+interface Theme extends DBTheme {
   sous_themes: SousTheme[];
   isExpanded: boolean;
   isSelected: boolean;
 }
 
-interface SousTheme {
-  id: number;
-  nom: string;
-  description: string;
+interface SousTheme extends DBSousTheme {
   questionCount: number;
   isSelected: boolean;
 }
@@ -151,14 +143,22 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
       }
 
       // Mapper les données
-      const formattedThemes =
-        themesData?.map(theme => ({
+      const formattedThemes: Theme[] =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        themesData?.map((theme: any) => ({
           ...theme,
           isExpanded: false,
           isSelected: false,
-          sous_themes: theme.sous_themes.map((st: unknown) => ({
+          ordre: theme.ordre ?? 0,
+          actif: theme.actif ?? true,
+          created_at: theme.created_at ?? new Date().toISOString(),
+          updated_at: theme.updated_at ?? new Date().toISOString(),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          sous_themes: theme.sous_themes.map((st: any) => ({
             ...st,
-            questionCount: questionsCount?.filter(q => q.sous_theme_id === st.id).length || 0,
+            questionCount:
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              questionsCount?.filter((q: any) => q.sous_theme_id === st.id).length ?? 0,
             isSelected: false,
           })),
         })) || [];
@@ -262,7 +262,7 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
 
     return (
       <View style={styles.scoringItem}>
-        <Text style={[styles.scoringLabel, { color: colors.textSecondary }]}>{label}</Text>
+        <Text style={[styles.scoringLabel, { color: colors.text }]}>{label}</Text>
         <View style={styles.scoreInputContainer}>
           <TouchableOpacity
             style={[
@@ -276,11 +276,7 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             disabled={value <= min}
             activeOpacity={0.7}
           >
-            <Ionicons
-              name="remove"
-              size={16}
-              color={value <= min ? colors.textSecondary : '#FFF'}
-            />
+            <Ionicons name="remove" size={16} color={value <= min ? colors.text : '#FFF'} />
           </TouchableOpacity>
 
           <View
@@ -307,7 +303,7 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
             disabled={value >= max}
             activeOpacity={0.7}
           >
-            <Ionicons name="add" size={16} color={value >= max ? colors.textSecondary : '#FFF'} />
+            <Ionicons name="add" size={16} color={value >= max ? colors.text : '#FFF'} />
           </TouchableOpacity>
         </View>
       </View>

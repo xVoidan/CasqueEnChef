@@ -217,7 +217,9 @@ class SessionService {
         // On prend la première réponse sélectionnée ou null si aucune
         const reponseId = answer.selectedAnswers.length > 0 ? answer.selectedAnswers[0] : null;
 
-        console.log('Tentative de sauvegarde avec:', {
+        // Tentative de sauvegarde avec les données
+
+        const { error } = await supabase.from('reponses_utilisateur').insert({
           session_id: sessionId,
           question_id: answer.questionId,
           reponse_id: reponseId,
@@ -225,23 +227,16 @@ class SessionService {
           temps_reponse: answer.timeSpent,
         });
 
-        const { error } = await supabase
-          .from('reponses_utilisateur')
-          .insert({
-            session_id: sessionId,
-            question_id: answer.questionId,
-            reponse_id: reponseId,
-            est_correcte: answer.isCorrect,
-            temps_reponse: answer.timeSpent,
-          });
-
         if (error) {
-          console.error('Erreur lors de la sauvegarde dans Supabase:', JSON.stringify(error, null, 2));
-          console.error('Détails de l\'erreur:', {
+          console.error(
+            'Erreur lors de la sauvegarde dans Supabase:',
+            JSON.stringify(error, null, 2)
+          );
+          console.error("Détails de l'erreur:", {
             code: error.code,
             message: error.message,
             details: error.details,
-            hint: error.hint
+            hint: error.hint,
           });
           throw error;
         }
@@ -403,13 +398,14 @@ class SessionService {
         const sousTheme = sousThemesData?.find(st => st.id === question.sous_theme_id);
 
         if (sousTheme?.theme) {
-          const themeId = sousTheme.theme.id;
+          const theme = Array.isArray(sousTheme.theme) ? sousTheme.theme[0] : sousTheme.theme;
+          const themeId = theme.id;
 
           if (!themeStatsMap.has(themeId)) {
             themeStatsMap.set(themeId, {
               themeId,
-              themeName: sousTheme.theme.nom,
-              themeColor: sousTheme.theme.couleur,
+              themeName: theme.nom,
+              themeColor: theme.couleur,
               totalQuestions: 0,
               correctAnswers: 0,
               points: 0,
@@ -446,7 +442,8 @@ class SessionService {
       const themeStats = Array.from(themeStatsMap.values()).map(theme => ({
         ...theme,
         successRate: (theme.correctAnswers / theme.totalQuestions) * 100,
-        sousThemes: Array.from(theme.sousThemes.values()).map(st => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sousThemes: Array.from(theme.sousThemes.values()).map((st: any) => ({
           ...st,
           successRate: (st.correctAnswers / st.totalQuestions) * 100,
         })),
@@ -456,7 +453,7 @@ class SessionService {
       const failedQuestions = sessionData.questions
         .map((question, index) => {
           const answer = sessionData.answers[index];
-          if (!answer ?? answer.isCorrect) {
+          if (!answer || answer.isCorrect) {
             return null;
           }
 
@@ -470,7 +467,11 @@ class SessionService {
           return {
             questionId: question.id,
             enonce: question.enonce,
-            themeName: sousTheme?.theme?.nom ?? '',
+            themeName:
+              (Array.isArray(sousTheme?.theme)
+                ? sousTheme?.theme[0]?.nom
+                : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (sousTheme?.theme as any)?.nom) ?? '',
             sousThemeName: sousTheme?.nom ?? '',
             userAnswer: userAnswerText,
             correctAnswer: correctAnswerText,

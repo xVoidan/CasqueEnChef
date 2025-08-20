@@ -25,7 +25,7 @@ class AvatarService {
 
       // Sélectionner l'image
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaType.Images,
+        mediaTypes: 'images' as const,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.7,

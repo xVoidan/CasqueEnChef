@@ -35,7 +35,10 @@ class ProfileService {
       return { data, error: null };
     } catch (error) {
       console.error('Erreur lors de la récupération du profil:', error);
-      return { data: null, error: error.message };
+      return {
+        data: null,
+        error: error instanceof Error ? error.message : 'Une erreur est survenue',
+      };
     }
   }
 
@@ -57,7 +60,10 @@ class ProfileService {
       return { data, error: null };
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
-      return { data: null, error: error.message };
+      return {
+        data: null,
+        error: error instanceof Error ? error.message : 'Une erreur est survenue',
+      };
     }
   }
 
@@ -76,7 +82,10 @@ class ProfileService {
       return { success: true, error: null };
     } catch (error) {
       console.error('Erreur lors du changement de mot de passe:', error);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Une erreur est survenue',
+      };
     }
   }
 
@@ -95,7 +104,10 @@ class ProfileService {
       return { success: true, error: null };
     } catch (error) {
       console.error("Erreur lors du changement d'email:", error);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Une erreur est survenue',
+      };
     }
   }
 
@@ -157,7 +169,9 @@ class ProfileService {
         throw recentError;
       }
 
-      const joursConsecutifs = this.calculateConsecutiveDays(recentSessions || []);
+      const joursConsecutifs = this.calculateConsecutiveDays(
+        recentSessions?.map(s => ({ created_at: s.date_debut })) || []
+      );
       const meilleurScore = sessionsData?.[0]?.score ?? 0;
 
       return {
@@ -179,7 +193,7 @@ class ProfileService {
       return 0;
     }
 
-    const dates = sessions.map(s => new Date(s.date_debut).toDateString());
+    const dates = sessions.map(s => new Date(s.created_at).toDateString());
     const uniqueDates = [...new Set(dates)];
 
     let consecutiveDays = 0;
@@ -250,7 +264,7 @@ class ProfileService {
     }
 
     // Badge régularité
-    if (stats.jours_consecutifs >= 7) {
+    if ((stats.jours_consecutifs ?? 0) >= 7) {
       badges.push({
         id: 'regular',
         name: 'Régulier',
@@ -298,7 +312,10 @@ class ProfileService {
       return { success: true, error: null };
     } catch (error) {
       console.error('Erreur lors de la suppression du compte:', error);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Une erreur est survenue',
+      };
     }
   }
 }

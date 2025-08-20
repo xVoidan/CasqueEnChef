@@ -16,6 +16,9 @@ import {
 } from 'react-native';
 import Animated, {
   FadeInDown,
+  FadeInUp,
+  SlideInRight,
+  BounceIn,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
@@ -32,6 +35,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { shadows, typography, spacing, borderRadius } from '../styles/theme';
 import { COLORS } from '../constants/styleConstants';
 import { TrainingStackScreenProps } from '../types/navigation';
+import { ButtonContainer } from '../components/ButtonContainer';
 
 const { width: _SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -83,7 +87,9 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 }) => {
   const { colors } = useTheme();
   const { user: _user } = useAuth();
-  const [stats, _setStats] = useState<SessionStats | null>(route.params?.stats ?? null);
+  const [stats, _setStats] = useState<SessionStats | null>(
+    (route.params?.stats as SessionStats | null) ?? null
+  );
   const [loading, _setLoading] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<number | null>(null);
   const isAbandoned = route.params?.isAbandoned ?? false;
@@ -207,8 +213,8 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
   };
 
   const startNewSession = (sameParams: boolean) => {
-    if (sameParams) {
-      navigation.replace('TrainingSession', route.params?.sessionParams ?? {});
+    if (sameParams && route.params?.sessionParams) {
+      navigation.replace('TrainingSession', route.params.sessionParams);
     } else {
       void navigation.navigate('TrainingConfig');
     }
@@ -507,7 +513,9 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={shareResults}
+                onPress={() => {
+                  void shareResults();
+                }}
                 style={[styles.secondaryButton, { backgroundColor: colors.surface }, shadows.sm]}
                 activeOpacity={0.7}
               >
@@ -517,7 +525,9 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
             </View>
 
             <TouchableOpacity
-              onPress={() => void navigation.navigate('HomeScreen')}
+              onPress={() => {
+                void navigation.getParent()?.navigate('Home', { screen: 'HomeScreen' });
+              }}
               style={styles.homeButton}
               activeOpacity={0.7}
             >

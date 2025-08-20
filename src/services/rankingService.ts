@@ -207,8 +207,6 @@ class RankingService {
             username: user.username,
             avatar_url: user.avatar_url,
             points_total: user.points_total,
-            niveau: user.niveau,
-            concours_type: user.concours_type,
             est_utilisateur_actuel: false,
           })
         ) ?? []
@@ -222,7 +220,7 @@ class RankingService {
   /**
    * Génère des données de classement fictives
    */
-  private getMockRankings(type: RankingType): RankingUser[] {
+  private getMockRankings(type: RankingType | 'caporal' | 'lieutenant'): RankingUser[] {
     const mockUsers = [
       { name: 'Sophie Martin', avatar: '👩', points: 2850, evolution: 'up' as Evolution },
       { name: 'Lucas Dubois', avatar: '👨', points: 2720, evolution: 'up' as Evolution },
@@ -248,7 +246,7 @@ class RankingService {
             ? Math.floor(user.points / 3)
             : user.points,
       points_periode:
-        (type === 'hebdomadaire' ?? type === 'mensuel')
+        type === 'hebdomadaire' || type === 'mensuel'
           ? Math.floor(user.points / (type === 'hebdomadaire' ? 10 : 3))
           : undefined,
       niveau: index < 3 ? 'avance' : index < 6 ? 'intermediaire' : 'debutant',

@@ -360,7 +360,7 @@ export const BadgesScreen = () => {
     }
 
     const rankColors = {
-      gradient: isDark ? ['#1F2937', '#111827'] : ['#F3F4F6', '#E5E7EB'],
+      gradient: (isDark ? ['#1F2937', '#111827'] : ['#F3F4F6', '#E5E7EB']) as [string, string],
     };
 
     return (
@@ -414,22 +414,26 @@ export const BadgesScreen = () => {
                 Avantages débloqués
               </Text>
               <View style={styles.rankAdvantagesList}>
-                {rank.avantages.timer_bonus && (
-                  <View style={[styles.rankAdvantageItem, { backgroundColor: colors.surface }]}>
-                    <Ionicons name="time" size={20} color={colors.primary} />
-                    <Text style={[styles.rankAdvantageText, { color: colors.text }]}>
-                      +{rank.avantages.timer_bonus}s bonus temps
-                    </Text>
-                  </View>
-                )}
-                {rank.avantages.hints && (
-                  <View style={[styles.rankAdvantageItem, { backgroundColor: colors.surface }]}>
-                    <Ionicons name="bulb" size={20} color={colors.warning} />
-                    <Text style={[styles.rankAdvantageText, { color: colors.text }]}>
-                      {rank.avantages.hints} indices disponibles
-                    </Text>
-                  </View>
-                )}
+                {typeof rank.avantages === 'object' &&
+                  !Array.isArray(rank.avantages) &&
+                  rank.avantages.timer_bonus && (
+                    <View style={[styles.rankAdvantageItem, { backgroundColor: colors.surface }]}>
+                      <Ionicons name="time" size={20} color={colors.primary} />
+                      <Text style={[styles.rankAdvantageText, { color: colors.text }]}>
+                        +{rank.avantages.timer_bonus}s bonus temps
+                      </Text>
+                    </View>
+                  )}
+                {typeof rank.avantages === 'object' &&
+                  !Array.isArray(rank.avantages) &&
+                  rank.avantages.hints && (
+                    <View style={[styles.rankAdvantageItem, { backgroundColor: colors.surface }]}>
+                      <Ionicons name="bulb" size={20} color={colors.warning} />
+                      <Text style={[styles.rankAdvantageText, { color: colors.text }]}>
+                        {rank.avantages.hints} indices disponibles
+                      </Text>
+                    </View>
+                  )}
               </View>
             </View>
           )}

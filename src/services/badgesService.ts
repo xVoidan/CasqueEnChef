@@ -36,7 +36,7 @@ export interface Rang {
   rang_suivant: string;
   points_requis_suivant: number;
   progression_rang: number;
-  avantages: string[];
+  avantages: string[] | { timer_bonus?: number; hints?: number };
 }
 
 export interface NotificationRecompense {
@@ -248,7 +248,6 @@ class BadgesService {
           message: `Vous avez complété le défi "${defi.nom}" et gagné ${points} points !`,
           icone: defi.icone,
           couleur: defi.couleur,
-          reference_id: defiId,
         });
       }
     } catch (error) {

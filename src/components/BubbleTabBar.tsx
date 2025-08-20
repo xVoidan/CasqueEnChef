@@ -114,7 +114,6 @@ const BubbleTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
               accessibilityLabel={options.tabBarAccessibilityLabel}
-              testID={options.tabBarTestID}
               onPress={onPress}
               onLongPress={onLongPress}
               style={styles.tab}

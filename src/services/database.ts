@@ -1,6 +1,13 @@
 import { supabase } from '../config/supabase';
-// Types are exported from database.ts but not used locally
-import type {} from '../types/database';
+import type {
+  ThemeWithSousThemes,
+  QuestionWithReponses,
+  UserStats,
+  Profile,
+  Session,
+  SessionWithDetails,
+  ReponseUtilisateur,
+} from '../types/database';
 
 // ============================================
 // SERVICE DE BASE DE DONNÉES
@@ -91,7 +98,8 @@ class DatabaseService {
       }
 
       // Récupère les IDs des questions
-      const questionIds = questionsData?.map(q => q.question_id) ?? [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const questionIds = questionsData?.map((q: any) => q.question_id) ?? [];
 
       if (questionIds.length === 0) {
         return [];
@@ -235,7 +243,7 @@ class DatabaseService {
           sous_theme_id: sousThemeId ?? null,
           statut: 'en_cours',
         })
-        .select('id, profile_id, type_session, theme_id, sous_theme_id, statut, created_at')
+        .select('*')
         .single();
 
       if (error) {
@@ -294,10 +302,15 @@ class DatabaseService {
       // Calcule les statistiques
       const reponsesUtilisateur = sessionData.reponses_utilisateur ?? [];
       const nombreQuestions = reponsesUtilisateur.length;
-      const nombreReponsesCorrectes = reponsesUtilisateur.filter(r => r.est_correcte).length;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nombreReponsesCorrectes = reponsesUtilisateur.filter((r: any) => r.est_correcte).length;
       const score =
         nombreQuestions > 0 ? Math.round((nombreReponsesCorrectes / nombreQuestions) * 100) : 0;
-      const tempsTotal = reponsesUtilisateur.reduce((sum, r) => sum + (r.temps_reponse ?? 0), 0);
+      const tempsTotal = reponsesUtilisateur.reduce(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (sum: any, r: any) => sum + (r.temps_reponse ?? 0),
+        0
+      );
 
       // Met à jour la session
       const { data, error } = await supabase
@@ -452,15 +465,17 @@ class DatabaseService {
 
       (data ?? []).forEach(item => {
         if (item.questions) {
-          const q = item.questions;
-          if (!questionsMap.has(q.id)) {
+          const q = Array.isArray(item.questions) ? item.questions[0] : item.questions;
+          if (q && !questionsMap.has(q.id)) {
             questionsMap.set(q.id, {
               ...q,
               explication: q.explications?.[0] ?? undefined,
               sous_theme: q.sous_themes
                 ? {
-                    ...q.sous_themes,
-                    theme: q.sous_themes.themes ?? undefined,
+                    ...(Array.isArray(q.sous_themes) ? q.sous_themes[0] : q.sous_themes),
+                    theme:
+                      (Array.isArray(q.sous_themes) ? q.sous_themes[0] : q.sous_themes)?.themes ??
+                      undefined,
                   }
                 : undefined,
             });
@@ -491,7 +506,7 @@ class DatabaseService {
       if (error) {
         throw error;
       }
-      if (!data ?? data.length === 0) {
+      if (!data || data.length === 0) {
         return null;
       }
 
@@ -523,7 +538,8 @@ class DatabaseService {
         }
       >();
 
-      (themeStats ?? []).forEach(session => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (themeStats ?? []).forEach((session: any) => {
         const themeName = session.themes?.nom;
         if (themeName) {
           const current = progressionParTheme.get(themeName) ?? {

@@ -127,9 +127,21 @@ export const ObjectivesTab: React.FC<ObjectivesTabProps> = ({ userId }) => {
     }
   };
 
-  const CircularProgress = ({ progress, max, radius = 30, strokeWidth = 4, color }: Badge) => {
+  const CircularProgress = ({
+    progress,
+    max,
+    radius = 30,
+    strokeWidth = 4,
+    color,
+  }: {
+    progress: number;
+    max: number;
+    radius?: number;
+    strokeWidth?: number;
+    color: string;
+  }) => {
     const circumference = 2 * Math.PI * radius;
-    const percentage = (progress / max) * 100;
+    const percentage = max > 0 ? (progress / max) * 100 : 0;
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
     return (

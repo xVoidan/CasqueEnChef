@@ -18,7 +18,7 @@ export const Timer: React.FC<TimerProps> = ({ duration, onTimeUp, isPaused, onTi
   const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState(duration);
   const animatedValue = useRef(new Animated.Value(1)).current;
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setTimeLeft(duration);

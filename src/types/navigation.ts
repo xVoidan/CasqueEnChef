@@ -48,7 +48,21 @@ export type HomeStackParamList = {
   SessionReport: {
     sessionId: number;
     stats: unknown;
-    sessionParams?: unknown;
+    sessionParams?: {
+      themes: number[];
+      sousThemes: number[];
+      settings: {
+        questionType: 'QCU' | 'QCM' | 'MIXTE';
+        timerEnabled: boolean;
+        timePerQuestion: number;
+        scoring: {
+          correct: number;
+          incorrect: number;
+          noAnswer: number;
+          partial: number;
+        };
+      };
+    };
     isAbandoned?: boolean;
   };
   RewardAnimation: {
@@ -107,7 +121,21 @@ export type TrainingStackParamList = {
   SessionReport: {
     sessionId: number;
     stats: unknown;
-    sessionParams?: unknown;
+    sessionParams?: {
+      themes: number[];
+      sousThemes: number[];
+      settings: {
+        questionType: 'QCU' | 'QCM' | 'MIXTE';
+        timerEnabled: boolean;
+        timePerQuestion: number;
+        scoring: {
+          correct: number;
+          incorrect: number;
+          noAnswer: number;
+          partial: number;
+        };
+      };
+    };
     isAbandoned?: boolean;
   };
   RewardAnimation: {
