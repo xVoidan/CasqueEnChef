@@ -54,7 +54,17 @@ const Bar: React.FC<{
     <View style={[styles.barContainer, { width: barWidth }]}>
       {showValues && <Text style={styles.value}>{Math.round(item.value)}%</Text>}
       <View style={[styles.barWrapper, { height }]}>
-        <Animated.View style={[styles.bar, { backgroundColor: item.color }, animatedStyle]} />
+        <View style={[styles.barBackground, { height, width: barWidth * 0.7 }]} />
+        <Animated.View 
+          style={[
+            styles.bar, 
+            { 
+              backgroundColor: item.color,
+              width: barWidth * 0.7,
+            }, 
+            animatedStyle
+          ]} 
+        />
       </View>
       <Text style={styles.label} numberOfLines={2}>
         {item.label}
@@ -106,21 +116,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   barWrapper: {
+    position: 'relative',
     justifyContent: 'flex-end',
+    alignItems: 'center',
     marginBottom: spacing.xs,
+    width: '100%',
   },
   bar: {
-    width: '80%',
+    position: 'absolute',
+    bottom: 0,
     borderTopLeftRadius: 4,
     borderTopRightRadius: 4,
+    minHeight: 2,
+  },
+  barBackground: {
+    position: 'absolute',
+    bottom: 0,
+    backgroundColor: '#E5E5E5',
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    opacity: 0.3,
   },
   value: {
     ...typography.small,
     fontWeight: 'bold',
     marginBottom: spacing.xs,
+    color: '#333',
   },
   label: {
     ...typography.caption,
     textAlign: 'center',
+    color: '#666',
+    fontSize: 10,
   },
 });

@@ -365,10 +365,12 @@ export const useSessionAnalytics = (
       return [];
     }
 
-    return stats.themeStats.map(theme => ({
+    const defaultColors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+    
+    return stats.themeStats.map((theme, index) => ({
       label: theme.themeName.length > 8 ? theme.themeName.substring(0, 8) + '...' : theme.themeName,
       value: theme.successRate,
-      color: theme.themeColor,
+      color: theme.themeColor || defaultColors[index % defaultColors.length],
       fullLabel: theme.themeName,
     }));
   }, [stats]);

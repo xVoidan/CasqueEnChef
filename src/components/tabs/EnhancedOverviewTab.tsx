@@ -47,7 +47,7 @@ interface InsightData {
 interface EnhancedOverviewTabProps {
   stats: SessionStats;
   achievements: Achievement[];
-  barChartData: Array<{ value: number; label: string; color?: string }>;
+  barChartData: Array<{ value: number; label: string; color: string; fullLabel?: string }>;
   gradeColor: string;
   gradeEmoji: string;
   scoreMessage: string;
@@ -275,7 +275,7 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
           style={[styles.chartCard, { backgroundColor: colors.surface }]}
         >
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Performance détaillée</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Performance par thème</Text>
             <TouchableOpacity
               style={styles.chartToggle}
               onPress={() => setExpandedSection(expandedSection === 'chart' ? null : 'chart')}
