@@ -169,10 +169,15 @@ export const DetailsTab = memo<DetailsTabProps>(({ stats, colors, onReviewQuesti
             </TouchableOpacity>
           </View>
 
-          <View style={styles.failedQuestionsList}>
-            {stats.failedQuestions
-              .slice(0, expandedQuestions ? undefined : 3)
-              .map((question, index) => (
+          <ScrollView 
+            style={styles.failedQuestionsList} 
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={true}
+          >
+            {stats.failedQuestions && stats.failedQuestions.length > 0 ? (
+              stats.failedQuestions
+                .slice(0, expandedQuestions ? undefined : 3)
+                .map((question, index) => (
                 <TouchableOpacity
                   key={question.questionId}
                   style={[styles.failedQuestionItem, { borderBottomColor: colors.border }]}
@@ -220,8 +225,13 @@ export const DetailsTab = memo<DetailsTabProps>(({ stats, colors, onReviewQuesti
                     </View>
                   </View>
                 </TouchableOpacity>
-              ))}
-          </View>
+              ))
+            ) : (
+              <Text style={[styles.noQuestionsText, { color: colors.textSecondary }]}>
+                Aucune question à afficher
+              </Text>
+            )}
+          </ScrollView>
 
           {stats.failedQuestions.length > 0 && (
             <TouchableOpacity
@@ -369,7 +379,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   failedQuestionsList: {
-    maxHeight: 400,
+    maxHeight: 300,
+    marginBottom: spacing.md,
   },
   failedQuestionItem: {
     paddingVertical: spacing.md,
@@ -453,6 +464,12 @@ const styles = StyleSheet.create({
     ...typography.body,
     textAlign: 'center',
     marginTop: spacing.sm,
+  },
+  noQuestionsText: {
+    ...typography.body,
+    textAlign: 'center',
+    padding: spacing.lg,
+    fontStyle: 'italic',
   },
 });
 
