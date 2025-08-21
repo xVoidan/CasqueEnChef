@@ -2,6 +2,7 @@ import React, {
   /* eslint-disable react-native/no-inline-styles, react-native/no-color-literals */ useEffect,
   useState,
   useRef as _useRef,
+  useCallback,
 } from 'react';
 import {
   View,
@@ -15,12 +16,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   FadeInDown,
+  FadeInUp,
+  SlideInRight,
+  BounceIn,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   withTiming,
   withDelay,
   withSequence,
+  interpolate,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -32,7 +37,7 @@ import { COLORS } from '../constants/styleConstants';
 import { TrainingStackScreenProps } from '../types/navigation';
 import { ButtonContainer } from '../components/ButtonContainer';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: _SCREEN_WIDTH } = Dimensions.get('window');
 
 interface SessionStats {
   sessionId: number;
@@ -93,28 +98,50 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
   const starScale = useSharedValue(1);
   const progressAnimation = useSharedValue(0);
 
+  const triggerCelebration = useCallback(() => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    celebrationScale.value = withSequence(withSpring(1.2), withSpring(1));
+    starScale.value = withDelay(200, withSequence(withSpring(1.3), withSpring(1)));
+  }, [celebrationScale, starScale]);
+
+  const triggerEncouragement = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    celebrationScale.value = withSequence(withTiming(0.95, { duration: 200 }), withSpring(1));
+    starScale.value = withDelay(
+      100,
+      withSequence(withTiming(0.8, { duration: 200 }), withSpring(1))
+    );
+  }, [celebrationScale, starScale]);
+
   useEffect(() => {
-    // Animation douce au chargement
-    celebrationScale.value = withDelay(200, withSpring(1.05));
-    starScale.value = withSequence(withDelay(400, withSpring(1.1)), withSpring(1));
-
     if (stats) {
-      progressAnimation.value = withDelay(300, withTiming(stats.successRate, { duration: 1500 }));
-    }
-  }, [celebrationScale, starScale, progressAnimation, stats]);
+      // Animation d'entrée depuis 0
+      celebrationScale.value = 0;
+      starScale.value = 0;
 
-  const getGradeColor = (rate: number) => {
-    if (rate >= 80) {
-      return COLORS.success;
+      // Puis animer vers 1 avec effet approprié
+      celebrationScale.value = withDelay(200, withSpring(1, { damping: 15, stiffness: 150 }));
+      starScale.value = withDelay(400, withSpring(1, { damping: 15, stiffness: 150 }));
+
+      // Déclencher les animations spécifiques selon le score
+      if (stats.successRate >= 80 && !isAbandoned) {
+        setTimeout(() => triggerCelebration(), 600);
+      } else if (stats.successRate < 50 && !isAbandoned) {
+        setTimeout(() => triggerEncouragement(), 600);
+      }
+
+      // Animer la progression
+      progressAnimation.value = withDelay(500, withTiming(stats.successRate, { duration: 1500 }));
     }
-    if (rate >= 60) {
-      return COLORS.warning;
-    }
-    if (rate >= 40) {
-      return '#FFA500';
-    }
-    return COLORS.error;
-  };
+  }, [
+    stats,
+    celebrationScale,
+    starScale,
+    progressAnimation,
+    triggerCelebration,
+    triggerEncouragement,
+    isAbandoned,
+  ]);
 
   const getGradeEmoji = (rate: number) => {
     if (rate >= 90) {
@@ -124,27 +151,37 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
       return '⭐';
     }
     if (rate >= 70) {
-      return '✨';
-    }
-    if (rate >= 60) {
       return '👍';
     }
-    if (rate >= 50) {
+    if (rate >= 60) {
       return '💪';
     }
-    if (rate >= 40) {
-      return '📚';
+    return '📚';
+  };
+
+  const getGradeColor = (rate: number) => {
+    if (rate >= 90) {
+      return '#FFD700';
     }
-    return '🎯';
+    if (rate >= 80) {
+      return '#10B981';
+    }
+    if (rate >= 70) {
+      return '#3B82F6';
+    }
+    if (rate >= 60) {
+      return '#F59E0B';
+    }
+    return '#EF4444';
   };
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    const secs = seconds % 60;
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleShare = async () => {
+  const shareResults = async () => {
     if (!stats) {
       return;
     }
@@ -164,22 +201,23 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
     }
   };
 
-  const handleNewSession = () => {
+  const startNewSession = (sameParams: boolean) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('TrainingConfig');
-  };
-
-  const handleGoHome = () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('HomeScreen' as never);
+    if (sameParams && route.params?.sessionParams) {
+      navigation.replace('TrainingSession', route.params.sessionParams);
+    } else {
+      navigation.navigate('TrainingConfig');
+    }
   };
 
   const celebrationAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: celebrationScale.value }],
+    opacity: interpolate(celebrationScale.value, [0, 0.5, 1], [0, 0.8, 1]),
   }));
 
   const starAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: starScale.value }],
+    opacity: interpolate(starScale.value, [0, 0.5, 1], [0, 0.8, 1]),
   }));
 
   const progressBarStyle = useAnimatedStyle(() => ({
@@ -188,7 +226,10 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 
   if (loading || !stats) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={['top']}
+      >
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: colors.text }]}>
             Calcul de vos résultats...
@@ -206,106 +247,146 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
       style={[styles.container, { backgroundColor: colors.background }]}
       edges={['top']}
     >
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Header compact avec navigation */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleGoHome} style={styles.headerButton}>
-            <Ionicons name="close" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
-            {isAbandoned ? 'Session Interrompue' : 'Résultats'}
-          </Text>
-          <TouchableOpacity onPress={() => void handleShare()} style={styles.headerButton}>
-            <Ionicons name="share-outline" size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Score principal - Design compact */}
-        <View style={[styles.scoreSection, { backgroundColor: colors.surface }]}>
-          <Animated.View style={[styles.scoreCircle, celebrationAnimatedStyle]}>
-            <LinearGradient
-              colors={[gradeColor, `${gradeColor}88`]}
-              style={styles.scoreGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Animated.Text style={[styles.scoreEmoji, starAnimatedStyle]}>
-                {getGradeEmoji(stats.successRate)}
-              </Animated.Text>
-              <Text style={styles.scoreValue}>
-                {stats.correctAnswers}/{stats.totalQuestions}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: spacing.sm, paddingBottom: 120 }}
+      >
+        {/* Header avec score principal */}
+        <Animated.View entering={FadeInDown.duration(600).delay(200)} style={styles.header}>
+          <LinearGradient
+            colors={isAbandoned ? ['#F59E0B', '#F59E0BCC'] : [gradeColor, `${gradeColor}CC`]}
+            style={styles.scoreCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Animated.View style={celebrationAnimatedStyle}>
+              <Text style={styles.scoreTitle}>
+                {isAbandoned ? 'Session Interrompue' : 'Score Final'}
               </Text>
-              <Text style={styles.scoreLabel}>{stats.successRate.toFixed(0)}% de réussite</Text>
-            </LinearGradient>
-          </Animated.View>
+              <View style={styles.scoreContainer}>
+                <Animated.Text style={[styles.scoreText, starAnimatedStyle]}>
+                  {stats.correctAnswers}/{stats.totalQuestions}
+                </Animated.Text>
+                <Animated.Text style={[styles.gradeEmoji, starAnimatedStyle]}>
+                  {getGradeEmoji(stats.successRate)}
+                </Animated.Text>
+              </View>
+              {isAbandoned && (
+                <Text style={[styles.abandonedText, { color: colors.textSecondary }]}>
+                  (Session abandonnée)
+                </Text>
+              )}
+              <Text style={styles.scoreNote}>
+                Note: {((stats.successRate * 20) / 100).toFixed(1)}/20
+              </Text>
+            </Animated.View>
+          </LinearGradient>
+        </Animated.View>
 
-          {/* Note sur 20 */}
-          <View style={styles.gradeContainer}>
-            <Text style={[styles.gradeText, { color: colors.text }]}>
-              Note: {((stats.successRate * 20) / 100).toFixed(1)}/20
+        {/* Message pour session abandonnée */}
+        {isAbandoned && (
+          <Animated.View
+            entering={FadeInUp.duration(500).delay(300)}
+            style={[styles.abandonedCard, { backgroundColor: '#F59E0B15' }]}
+          >
+            <Ionicons name="information-circle" size={24} color={COLORS.warning} />
+            <Text style={[styles.abandonedMessageText, { color: colors.text }]}>
+              Session interrompue avant la fin. Vos résultats partiels sont enregistrés.
             </Text>
-            {displayScore > 0 && (
-              <Text style={[styles.pointsText, { color: colors.primary }]}>
-                +{displayScore.toFixed(0)} points
-              </Text>
-            )}
-          </View>
-        </View>
+          </Animated.View>
+        )}
 
-        {/* Statistiques détaillées */}
-        <View style={[styles.statsContainer, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Statistiques</Text>
+        {/* Statistiques principales */}
+        <Animated.View
+          entering={FadeInUp.duration(600).delay(400)}
+          style={[styles.statsCard, { backgroundColor: colors.surface }, shadows.sm]}
+        >
+          <Text style={[styles.statsTitle, { color: colors.text }]}>
+            {isAbandoned ? 'Performance Partielle' : 'Performance'}
+          </Text>
 
           {/* Barre de progression */}
-          <View style={styles.progressWrapper}>
+          <View style={styles.progressContainer}>
             <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
               <Animated.View
                 style={[styles.progressFill, { backgroundColor: gradeColor }, progressBarStyle]}
               />
             </View>
+            <Text style={[styles.progressText, { color: colors.text }]}>
+              {stats.successRate.toFixed(0)}% de réussite
+            </Text>
           </View>
 
-          {/* Grille de stats */}
+          {/* Stats en grille */}
           <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
+            <Animated.View entering={SlideInRight.duration(500).delay(600)} style={styles.statItem}>
+              <Ionicons name="checkmark-circle" size={24} color={COLORS.success} />
               <Text style={[styles.statValue, { color: colors.text }]}>{stats.correctAnswers}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Correct</Text>
-            </View>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Bonnes réponses
+              </Text>
+            </Animated.View>
 
-            <View style={styles.statItem}>
-              <Ionicons name="close-circle" size={20} color={COLORS.error} />
+            <Animated.View entering={SlideInRight.duration(500).delay(700)} style={styles.statItem}>
+              <Ionicons name="close-circle" size={24} color={COLORS.error} />
               <Text style={[styles.statValue, { color: colors.text }]}>
                 {stats.totalQuestions - stats.correctAnswers}
               </Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Erreurs</Text>
-            </View>
+            </Animated.View>
 
             {stats.totalTime && (
-              <View style={styles.statItem}>
-                <Ionicons name="time-outline" size={20} color={COLORS.info} />
+              <Animated.View
+                entering={SlideInRight.duration(500).delay(800)}
+                style={styles.statItem}
+              >
+                <Ionicons name="time" size={24} color={COLORS.info} />
                 <Text style={[styles.statValue, { color: colors.text }]}>
                   {formatTime(stats.totalTime)}
                 </Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Temps</Text>
-              </View>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Temps total</Text>
+              </Animated.View>
             )}
 
             {stats.averageTime && (
-              <View style={styles.statItem}>
-                <Ionicons name="speedometer-outline" size={20} color={COLORS.warning} />
+              <Animated.View
+                entering={SlideInRight.duration(500).delay(900)}
+                style={styles.statItem}
+              >
+                <Ionicons name="speedometer" size={24} color={COLORS.warning} />
                 <Text style={[styles.statValue, { color: colors.text }]}>
                   {formatTime(stats.averageTime)}
                 </Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Moy/Q</Text>
-              </View>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                  Moy. par question
+                </Text>
+              </Animated.View>
             )}
           </View>
-        </View>
 
-        {/* Performance par thème */}
-        <View style={[styles.themesContainer, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Performance par thème</Text>
+          {/* Points gagnés */}
+          <Animated.View
+            entering={BounceIn.duration(800).delay(1000)}
+            style={[styles.pointsCard, { backgroundColor: `${colors.primary}15` }]}
+          >
+            <Ionicons name="trophy" size={28} color={colors.primary} />
+            <View style={styles.pointsContent}>
+              <Text style={[styles.pointsValue, { color: colors.primary }]}>
+                {displayScore > 0 ? `+${displayScore.toFixed(0)}` : '0'} points
+              </Text>
+              <Text style={[styles.pointsLabel, { color: colors.textSecondary }]}>
+                ajoutés à votre score total
+              </Text>
+            </View>
+          </Animated.View>
+        </Animated.View>
+
+        {/* Répartition par thème */}
+        <Animated.View
+          entering={FadeInUp.duration(600).delay(1200)}
+          style={[styles.themeCard, { backgroundColor: colors.surface }, shadows.sm]}
+        >
+          <Text style={[styles.themeTitle, { color: colors.text }]}>Répartition par thème</Text>
 
           {stats.themeStats.map(theme => (
             <TouchableOpacity
@@ -317,31 +398,33 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
               activeOpacity={0.7}
             >
               <View style={styles.themeHeader}>
-                <View style={styles.themeInfo}>
-                  <View style={[styles.themeIcon, { backgroundColor: `${theme.themeColor}20` }]}>
-                    <Text style={{ color: theme.themeColor }}>{theme.themeName.charAt(0)}</Text>
-                  </View>
+                <View style={styles.themeLeft}>
+                  <View
+                    style={[styles.themeColorIndicator, { backgroundColor: theme.themeColor }]}
+                  />
                   <Text style={[styles.themeName, { color: colors.text }]}>{theme.themeName}</Text>
                 </View>
-                <View style={styles.themeScore}>
-                  <Text style={[styles.themeScoreText, { color: colors.text }]}>
+                <View style={styles.themeRight}>
+                  <Text style={[styles.themeScore, { color: colors.text }]}>
                     {theme.correctAnswers}/{theme.totalQuestions}
+                  </Text>
+                  <Text style={[styles.themePercentage, { color: colors.textSecondary }]}>
+                    {theme.successRate.toFixed(0)}%
                   </Text>
                   <Ionicons
                     name={selectedTheme === theme.themeId ? 'chevron-up' : 'chevron-down'}
-                    size={16}
+                    size={20}
                     color={colors.textSecondary}
                   />
                 </View>
               </View>
 
-              {/* Détails du thème (expandable) */}
               {selectedTheme === theme.themeId && (
-                <Animated.View entering={FadeInDown.duration(300)} style={styles.themeDetails}>
+                <Animated.View entering={FadeInDown.duration(300)} style={styles.sousThemesList}>
                   {theme.sousThemes.map(sousTheme => (
                     <View key={sousTheme.sousThemeId} style={styles.sousThemeItem}>
                       <Text style={[styles.sousThemeName, { color: colors.textSecondary }]}>
-                        {sousTheme.sousThemeName}
+                        • {sousTheme.sousThemeName}
                       </Text>
                       <Text style={[styles.sousThemeScore, { color: colors.text }]}>
                         {sousTheme.correctAnswers}/{sousTheme.totalQuestions}
@@ -352,72 +435,63 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
               )}
             </TouchableOpacity>
           ))}
-        </View>
+        </Animated.View>
 
         {/* Questions échouées */}
         {stats.failedQuestions.length > 0 && (
-          <View style={[styles.failedContainer, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              À revoir ({stats.failedQuestions.length})
+          <Animated.View
+            entering={FadeInUp.duration(600).delay(1400)}
+            style={[styles.failedQuestionsCard, { backgroundColor: colors.surface }, shadows.sm]}
+          >
+            <Text style={[styles.failedQuestionsTitle, { color: colors.text }]}>
+              Questions à revoir
             </Text>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.failedScroll}
-            >
-              {stats.failedQuestions.map(question => (
-                <View
-                  key={question.questionId}
-                  style={[styles.failedCard, { backgroundColor: colors.background }]}
-                >
-                  <Text style={[styles.failedQuestion, { color: colors.text }]} numberOfLines={3}>
-                    {question.enonce}
-                  </Text>
-                  <View style={styles.failedInfo}>
-                    <Text style={[styles.failedTheme, { color: colors.textSecondary }]}>
-                      {question.themeName}
-                    </Text>
-                    <Text style={[styles.failedAnswer, { color: COLORS.error }]}>
-                      ❌ {question.userAnswer ?? 'Pas de réponse'}
-                    </Text>
-                    <Text style={[styles.correctAnswer, { color: COLORS.success }]}>
-                      ✓ {question.correctAnswer}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
+            <Text style={[styles.failedQuestionsCount, { color: colors.textSecondary }]}>
+              {stats.failedQuestions.length} question{stats.failedQuestions.length > 1 ? 's' : ''} à
+              réviser
+            </Text>
+          </Animated.View>
         )}
-
-        {/* Espace pour les boutons */}
-        <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Boutons d'action */}
+      {/* Boutons d'action fixes en bas */}
       <ButtonContainer
         backgroundColor={colors.background}
         borderColor={colors.border}
         floating={false}
       >
-        <View style={styles.buttonsRow}>
+        <View style={styles.buttonsContainer}>
           <TouchableOpacity
-            style={[styles.actionButton, styles.secondaryButton, { borderColor: colors.primary }]}
-            onPress={handleGoHome}
+            style={[
+              styles.actionButton,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+            onPress={() => void shareResults()}
           >
-            <Ionicons name="home-outline" size={20} color={colors.primary} />
-            <Text style={[styles.buttonText, { color: colors.primary }]}>Accueil</Text>
+            <Ionicons name="share-outline" size={20} color={colors.primary} />
+            <Text style={[styles.buttonText, { color: colors.primary }]}>Partager</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: colors.primary }]}
-            onPress={handleNewSession}
+            onPress={() => startNewSession(false)}
           >
-            <Ionicons name="reload" size={20} color="#FFF" />
+            <Ionicons name="refresh" size={20} color="#FFF" />
             <Text style={[styles.buttonText, { color: '#FFF' }]}>Nouvelle session</Text>
           </TouchableOpacity>
         </View>
+
+        {route.params?.sessionParams && (
+          <TouchableOpacity
+            style={[styles.secondaryButton, { borderColor: colors.primary }]}
+            onPress={() => startNewSession(true)}
+          >
+            <Ionicons name="reload" size={18} color={colors.primary} />
+            <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>
+              Refaire avec les mêmes paramètres
+            </Text>
+          </TouchableOpacity>
+        )}
       </ButtonContainer>
     </SafeAreaView>
   );
@@ -426,9 +500,6 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: spacing.xl,
   },
   loadingContainer: {
     flex: 1,
@@ -439,108 +510,134 @@ const styles = StyleSheet.create({
     ...typography.body,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  headerButton: {
-    padding: spacing.xs,
-  },
-  headerTitle: {
-    ...typography.h4,
-    fontWeight: '600',
-  },
-  scoreSection: {
-    margin: spacing.lg,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    ...shadows.sm,
-  },
-  scoreCircle: {
-    width: 140,
-    height: 140,
-    marginBottom: spacing.md,
-  },
-  scoreGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 70,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreEmoji: {
-    fontSize: 32,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
     marginBottom: spacing.xs,
   },
-  scoreValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  scoreLabel: {
-    fontSize: 12,
-    color: '#FFF',
-    opacity: 0.9,
-    marginTop: spacing.xs,
-  },
-  gradeContainer: {
+  scoreCard: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
   },
-  gradeText: {
-    ...typography.h4,
-    fontWeight: '600',
+  scoreTitle: {
+    ...typography.bodyBold,
+    color: '#FFFFFF',
+    marginBottom: spacing.xs,
   },
-  pointsText: {
+  scoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  scoreText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  gradeEmoji: {
+    fontSize: 26,
+    marginLeft: spacing.sm,
+  },
+  scoreNote: {
     ...typography.body,
-    fontWeight: '600',
-    marginTop: spacing.xs,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    fontWeight: '500',
   },
-  statsContainer: {
+  abandonedText: {
+    ...typography.body,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  abandonedCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
+    marginTop: spacing.md,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  abandonedMessageText: {
+    ...typography.small,
+    marginLeft: spacing.sm,
+    flex: 1,
+  },
+  statsCard: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
     padding: spacing.lg,
     borderRadius: borderRadius.lg,
-    ...shadows.sm,
   },
-  sectionTitle: {
-    ...typography.bodyBold,
+  statsTitle: {
+    ...typography.h4,
     marginBottom: spacing.md,
   },
-  progressWrapper: {
+  progressContainer: {
     marginBottom: spacing.lg,
   },
   progressBar: {
-    height: 6,
-    borderRadius: 3,
+    height: 8,
+    borderRadius: 4,
     overflow: 'hidden',
+    marginBottom: spacing.sm,
   },
   progressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 4,
+  },
+  progressText: {
+    ...typography.caption,
+    textAlign: 'center',
   },
   statsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.sm,
   },
   statItem: {
+    width: '50%',
+    paddingHorizontal: spacing.sm,
+    marginBottom: spacing.md,
     alignItems: 'center',
   },
   statValue: {
-    ...typography.h4,
-    marginVertical: spacing.xs,
+    ...typography.h3,
+    marginTop: spacing.xs,
   },
   statLabel: {
+    ...typography.small,
+    textAlign: 'center',
+  },
+  pointsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.md,
+  },
+  pointsContent: {
+    marginLeft: spacing.md,
+  },
+  pointsValue: {
+    ...typography.h4,
+    fontWeight: 'bold',
+  },
+  pointsLabel: {
     ...typography.caption,
   },
-  themesContainer: {
+  themeCard: {
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     padding: spacing.lg,
     borderRadius: borderRadius.lg,
-    ...shadows.sm,
+  },
+  themeTitle: {
+    ...typography.h4,
+    marginBottom: spacing.md,
   },
   themeItem: {
     marginBottom: spacing.sm,
@@ -551,33 +648,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
   },
-  themeInfo: {
+  themeLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  themeIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+  themeColorIndicator: {
+    width: 4,
+    height: 24,
+    borderRadius: 2,
     marginRight: spacing.sm,
   },
   themeName: {
     ...typography.body,
+    flex: 1,
   },
-  themeScore: {
+  themeRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  themeScoreText: {
+  themeScore: {
     ...typography.bodyBold,
-    marginRight: spacing.xs,
+    marginRight: spacing.sm,
   },
-  themeDetails: {
-    paddingLeft: spacing.xl + spacing.lg,
-    paddingVertical: spacing.xs,
+  themePercentage: {
+    ...typography.small,
+    marginRight: spacing.sm,
+  },
+  sousThemesList: {
+    paddingLeft: spacing.xl,
+    paddingTop: spacing.xs,
   },
   sousThemeItem: {
     flexDirection: 'row',
@@ -592,43 +692,23 @@ const styles = StyleSheet.create({
     ...typography.small,
     fontWeight: '600',
   },
-  failedContainer: {
+  failedQuestionsCard: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
     padding: spacing.lg,
     borderRadius: borderRadius.lg,
-    ...shadows.sm,
   },
-  failedScroll: {
-    marginHorizontal: -spacing.sm,
+  failedQuestionsTitle: {
+    ...typography.h4,
+    marginBottom: spacing.xs,
   },
-  failedCard: {
-    width: SCREEN_WIDTH * 0.7,
-    padding: spacing.md,
-    marginHorizontal: spacing.sm,
-    borderRadius: borderRadius.md,
-    ...shadows.xs,
+  failedQuestionsCount: {
+    ...typography.body,
   },
-  failedQuestion: {
-    ...typography.small,
-    marginBottom: spacing.sm,
-  },
-  failedInfo: {
-    gap: spacing.xs,
-  },
-  failedTheme: {
-    ...typography.caption,
-  },
-  failedAnswer: {
-    ...typography.caption,
-  },
-  correctAnswer: {
-    ...typography.caption,
-    fontWeight: '600',
-  },
-  buttonsRow: {
+  buttonsContainer: {
     flexDirection: 'row',
     gap: spacing.md,
+    marginBottom: spacing.sm,
   },
   actionButton: {
     flex: 1,
@@ -637,13 +717,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
-    gap: spacing.sm,
-  },
-  secondaryButton: {
     borderWidth: 1,
-    backgroundColor: 'transparent',
+    gap: spacing.xs,
   },
   buttonText: {
     ...typography.bodyBold,
+  },
+  secondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    gap: spacing.xs,
+  },
+  secondaryButtonText: {
+    ...typography.small,
+    fontWeight: '600',
   },
 });

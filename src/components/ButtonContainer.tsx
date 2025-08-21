@@ -25,8 +25,8 @@ export const ButtonContainer: React.FC<ButtonContainerProps> = ({
   const insets = useSafeAreaInsets();
 
   // Approche simplifiée : padding fixe qui fonctionne bien avec la navigation
-  // On utilise un calcul simple qui garantit la visibilité
-  const bottomPadding = Math.max(90, insets.bottom + 70); // 90px minimum, ou insets + 70px
+  // On utilise un calcul simple qui garantit la visibilité sans chevauchement
+  const bottomPadding = Math.max(110, insets.bottom + 90); // 110px minimum, ou insets + 90px pour éviter tout chevauchement
 
   if (floating) {
     // Style flottant pour les boutons qui doivent être au-dessus du contenu
