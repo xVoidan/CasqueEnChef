@@ -169,7 +169,7 @@ export const DetailsTab = memo<DetailsTabProps>(({ stats, colors, onReviewQuesti
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.failedQuestionsList}>
+          <View style={styles.failedQuestionsList}>
             {stats.failedQuestions
               .slice(0, expandedQuestions ? undefined : 3)
               .map((question, index) => (
@@ -221,7 +221,7 @@ export const DetailsTab = memo<DetailsTabProps>(({ stats, colors, onReviewQuesti
                   </View>
                 </TouchableOpacity>
               ))}
-          </ScrollView>
+          </View>
 
           {stats.failedQuestions.length > 0 && (
             <TouchableOpacity

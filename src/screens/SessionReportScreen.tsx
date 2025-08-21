@@ -378,7 +378,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: spacing.xl }}
+        contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Header avec tabs accessibles */}
         <View style={styles.header}>

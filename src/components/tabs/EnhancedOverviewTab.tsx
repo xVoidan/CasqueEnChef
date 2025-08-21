@@ -429,6 +429,11 @@ const styles = StyleSheet.create({
   scoreOverlay: {
     position: 'absolute',
     alignItems: 'center',
+    justifyContent: 'center',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   scoreText: {
     fontSize: 32,
@@ -671,13 +676,14 @@ const styles = StyleSheet.create({
   },
   detailedStatsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
+    gap: spacing.xs,
     marginBottom: spacing.lg,
   },
   statCard: {
-    width: (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 2) / 3,
+    flex: 1,
+    minWidth: 90,
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
