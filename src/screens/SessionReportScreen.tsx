@@ -251,7 +251,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
       }
 
       try {
-        const comparison = await statsService.getSessionComparison(user.id, stats.score);
+        const comparison = await statsService.getSessionComparison(user.id, stats.successRate);
         setComparisonMetrics({
           userAverage: comparison.userAverage,
           globalAverage: comparison.globalAverage,
@@ -315,6 +315,13 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
     return results;
   }, [stats, navigation]);
 
+  // Gestion de la révision des questions
+  const handleReviewQuestions = useCallback((questions: FailedQuestion[]) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setQuestionsToReview(questions);
+    setReviewModalVisible(true);
+  }, []);
+
   // Gestion des actions du nouveau composant
   const handleActionPress = useCallback(
     (action: string) => {
@@ -343,13 +350,6 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
     },
     [stats, navigation, handleReviewQuestions]
   );
-
-  // Gestion de la révision des questions
-  const handleReviewQuestions = useCallback((questions: FailedQuestion[]) => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setQuestionsToReview(questions);
-    setReviewModalVisible(true);
-  }, []);
 
   // Navigation optimisée
   const startNewSession = useCallback(
@@ -465,8 +465,8 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
             celebrationAnimatedStyle={celebrationAnimatedStyle}
             scoring={scoring}
             starAnimatedStyle={starAnimatedStyle}
-            comparisonMetrics={comparisonMetrics}
-            insights={insights}
+            comparisonMetrics={comparisonMetrics ?? undefined}
+            insights={insights as never}
             onActionPress={handleActionPress}
           />
         )}

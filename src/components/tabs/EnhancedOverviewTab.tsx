@@ -217,7 +217,7 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
                   {scoring.noAnswer} point{Math.abs(scoring.noAnswer) !== 1 ? 's' : ''}
                 </Text>
               </View>
-              {scoring.partial !== 0 && (
+              {scoring.partial !== 0 && stats.hasQCM && (
                 <View style={styles.baremeItem}>
                   <View
                     style={[styles.baremeIndicator, { backgroundColor: BAREME_COLORS.partial }]}
@@ -484,9 +484,9 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Ionicons name="pulse" size={24} color="#EC4899" />
             <Text style={[styles.statValue, { color: colors.text }]}>
-              {stats.streakCount}/{stats.totalQuestions}
+              {stats.streakCount ?? 0}/{stats.totalQuestions}
             </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Série</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Série max</Text>
           </View>
         </Animated.View>
       </ScrollView>

@@ -167,7 +167,7 @@ export const OverviewTab = memo<OverviewTabProps>(
               value={stats.correctAnswers}
               duration={1000}
               delay={900}
-              style={[styles.quickStatValue, { color: colors.text }]}
+              style={StyleSheet.flatten([styles.quickStatValue, { color: colors.text }])}
             />
             <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Correct</Text>
           </View>
@@ -192,7 +192,7 @@ export const OverviewTab = memo<OverviewTabProps>(
               value={displayScore}
               duration={1000}
               delay={1100}
-              style={[styles.quickStatValue, { color: colors.text }]}
+              style={StyleSheet.flatten([styles.quickStatValue, { color: colors.text }])}
               prefix="+"
             />
             <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Points</Text>

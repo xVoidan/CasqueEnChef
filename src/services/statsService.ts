@@ -12,17 +12,23 @@ interface SessionAverage {
 
 class StatsService {
   /**
-   * Calcule la moyenne de l'utilisateur sur ses dernières sessions
+   * Calcule la moyenne de l'utilisateur sur toutes ses sessions terminées
    */
-  async getUserAverage(userId: string, limit: number = 20): Promise<number> {
+  async getUserAverage(userId: string, limit?: number): Promise<number> {
     try {
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('score, nombre_questions')
+      let query = supabase
+        .from('sessions_quiz')
+        .select('reponses_correctes, questions_repondues')
         .eq('user_id', userId)
         .eq('statut', 'termine')
-        .order('date_fin', { ascending: false })
-        .limit(limit);
+        .order('completed_at', { ascending: false });
+
+      // Si limite spécifiée, l'appliquer, sinon prendre toutes les sessions
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Erreur lors du calcul de la moyenne utilisateur:', error);
@@ -36,7 +42,9 @@ class StatsService {
       // Calculer le taux de réussite moyen
       const totalSuccessRate = data.reduce((acc, session) => {
         const successRate =
-          session.nombre_questions > 0 ? (session.score / session.nombre_questions) * 100 : 0;
+          session.questions_repondues > 0
+            ? (session.reponses_correctes / session.questions_repondues) * 100
+            : 0;
         return acc + successRate;
       }, 0);
 
@@ -61,10 +69,10 @@ class StatsService {
 
       // Fallback: calcul direct
       const { data, error } = await supabase
-        .from('sessions')
-        .select('score, nombre_questions')
+        .from('sessions_quiz')
+        .select('reponses_correctes, questions_repondues')
         .eq('statut', 'termine')
-        .order('date_fin', { ascending: false })
+        .order('completed_at', { ascending: false })
         .limit(500); // Prendre les 500 dernières sessions pour la moyenne
 
       if (error) {
@@ -78,7 +86,9 @@ class StatsService {
 
       const totalSuccessRate = data.reduce((acc, session) => {
         const successRate =
-          session.nombre_questions > 0 ? (session.score / session.nombre_questions) * 100 : 0;
+          session.questions_repondues > 0
+            ? (session.reponses_correctes / session.questions_repondues) * 100
+            : 0;
         return acc + successRate;
       }, 0);
 
@@ -95,19 +105,23 @@ class StatsService {
   async getPersonalBest(userId: string): Promise<number> {
     try {
       const { data, error } = await supabase
-        .from('sessions')
-        .select('score, nombre_questions')
+        .from('sessions_quiz')
+        .select('reponses_correctes, questions_repondues')
         .eq('user_id', userId)
-        .eq('statut', 'termine')
-        .order('score', { ascending: false })
-        .limit(1)
-        .single();
+        .eq('statut', 'termine');
 
-      if (error || !data) {
+      if (error || !data || data.length === 0) {
         return 0;
       }
 
-      return data.nombre_questions > 0 ? Math.round((data.score / data.nombre_questions) * 100) : 0;
+      // Calculer le taux de réussite pour chaque session et trouver le meilleur
+      const bestRate = Math.max(
+        ...data
+          .filter(session => session.questions_repondues > 0)
+          .map(session => (session.reponses_correctes / session.questions_repondues) * 100)
+      );
+
+      return Math.round(bestRate);
     } catch (error) {
       console.error('Erreur récupération meilleur score:', error);
       return 0;
@@ -115,27 +129,34 @@ class StatsService {
   }
 
   /**
-   * Calcule le percentile de l'utilisateur
+   * Calcule le percentile de l'utilisateur basé sur le taux de réussite
    */
-  async getUserPercentile(userId: string, currentScore: number): Promise<number> {
+  async getUserPercentile(userId: string, currentSuccessRate: number): Promise<number> {
     try {
-      // Compter combien de sessions ont un score inférieur
-      const { count: lowerCount, error: lowerError } = await supabase
-        .from('sessions')
-        .select('*', { count: 'exact', head: true })
-        .eq('statut', 'termine')
-        .lt('score', currentScore);
-
-      const { count: totalCount, error: totalError } = await supabase
-        .from('sessions')
-        .select('*', { count: 'exact', head: true })
+      // Récupérer toutes les sessions pour calculer leur taux de réussite
+      const { data: sessions, error: sessionsError } = await supabase
+        .from('sessions_quiz')
+        .select('reponses_correctes, questions_repondues')
         .eq('statut', 'termine');
 
-      if (lowerError || totalError || !totalCount) {
+      if (sessionsError || !sessions || sessions.length === 0) {
         return 50; // Valeur par défaut
       }
 
-      const percentile = Math.round((lowerCount! / totalCount) * 100);
+      // Calculer le taux de réussite pour chaque session
+      const successRates = sessions
+        .filter(s => s.questions_repondues > 0)
+        .map(s => (s.reponses_correctes / s.questions_repondues) * 100);
+
+      // Compter combien de sessions ont un taux inférieur
+      const lowerCount = successRates.filter(rate => rate < currentSuccessRate).length;
+      const totalCount = successRates.length;
+
+      if (totalCount === 0) {
+        return 50;
+      }
+
+      const percentile = Math.round((lowerCount / totalCount) * 100);
       return 100 - percentile; // Inverser pour avoir le top X%
     } catch (error) {
       console.error('Erreur calcul percentile:', error);
@@ -149,11 +170,11 @@ class StatsService {
   async getUserTrend(userId: string): Promise<number> {
     try {
       const { data, error } = await supabase
-        .from('sessions')
-        .select('score, nombre_questions, date_fin')
+        .from('sessions_quiz')
+        .select('reponses_correctes, questions_repondues, completed_at')
         .eq('user_id', userId)
         .eq('statut', 'termine')
-        .order('date_fin', { ascending: false })
+        .order('completed_at', { ascending: false })
         .limit(10);
 
       if (error || !data || data.length < 2) {
@@ -167,7 +188,9 @@ class StatsService {
       const calculateAverage = (sessions: typeof data) => {
         const total = sessions.reduce((acc, session) => {
           const rate =
-            session.nombre_questions > 0 ? (session.score / session.nombre_questions) * 100 : 0;
+            session.questions_repondues > 0
+              ? (session.reponses_correctes / session.questions_repondues) * 100
+              : 0;
           return acc + rate;
         }, 0);
         return sessions.length > 0 ? total / sessions.length : 0;
@@ -194,7 +217,7 @@ class StatsService {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('jours_consecutifs')
+        .select('serie_actuelle')
         .eq('id', userId)
         .single();
 
@@ -202,7 +225,7 @@ class StatsService {
         return 0;
       }
 
-      return profile.jours_consecutifs ?? 0;
+      return profile.serie_actuelle ?? 0;
     } catch (error) {
       console.error('Erreur récupération série:', error);
       return 0;
@@ -212,13 +235,13 @@ class StatsService {
   /**
    * Récupère toutes les statistiques de comparaison pour une session
    */
-  async getSessionComparison(userId: string, currentScore: number): Promise<SessionAverage> {
+  async getSessionComparison(userId: string, currentSuccessRate: number): Promise<SessionAverage> {
     const [userAverage, globalAverage, personalBest, percentile, trend, streak] = await Promise.all(
       [
         this.getUserAverage(userId),
         this.getGlobalAverage(),
         this.getPersonalBest(userId),
-        this.getUserPercentile(userId, currentScore),
+        this.getUserPercentile(userId, currentSuccessRate),
         this.getUserTrend(userId),
         this.getUserStreak(userId),
       ]
@@ -226,7 +249,7 @@ class StatsService {
 
     // Compter le nombre total de sessions
     const { count: totalSessions } = await supabase
-      .from('sessions')
+      .from('sessions_quiz')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('statut', 'termine');

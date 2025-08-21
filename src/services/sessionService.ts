@@ -147,20 +147,19 @@ class SessionService {
     };
 
     // Sauvegarder dans la base de données
-    // Utiliser le nombre de questions configuré ou le nombre de questions disponibles, selon le plus petit
-    const targetQuestions = settings.numberOfQuestions
-      ? Math.min(settings.numberOfQuestions, questions.length)
-      : questions.length;
 
     const { data, error } = await supabase
-      .from('sessions')
+      .from('sessions_quiz')
       .insert({
-        profile_id: userId,
-        type_session: 'entrainement',
-        score: 0,
-        nombre_questions: targetQuestions,
-        nombre_reponses_correctes: 0,
+        user_id: userId,
+        quiz_id: 1, // ID de quiz par défaut pour l'entraînement libre
+        score_actuel: 0,
+        score_final: null,
+        question_actuelle: 1,
         temps_total: 0,
+        temps_passe: 0,
+        questions_repondues: 0,
+        reponses_correctes: 0,
         statut: 'en_cours',
       })
       .select('id');
@@ -352,13 +351,16 @@ class SessionService {
 
       if (sessionId) {
         await supabase
-          .from('sessions')
+          .from('sessions_quiz')
           .update({
-            score: session.score,
-            nombre_reponses_correctes: correctAnswers,
+            score_actuel: session.score,
+            score_final: session.score,
+            reponses_correctes: correctAnswers,
+            questions_repondues: session.answers.length,
             temps_total: totalTime,
+            temps_passe: totalTime,
             statut: status,
-            date_fin: new Date().toISOString(),
+            completed_at: new Date().toISOString(),
           })
           .eq('id', sessionId);
       }
@@ -575,6 +577,21 @@ class SessionService {
       const averageTime =
         answeredQuestions > 0 ? Math.floor(sessionData.totalTime / answeredQuestions) : 0;
 
+      // Vérifier si la session contient des questions QCM
+      const hasQCM = sessionData.questions.some(q => q.type_question === 'QCM');
+
+      // Calculer la série de bonnes réponses consécutives
+      let currentStreak = 0;
+      let maxStreak = 0;
+      sessionData.answers.forEach(answer => {
+        if (answer.isCorrect) {
+          currentStreak++;
+          maxStreak = Math.max(maxStreak, currentStreak);
+        } else {
+          currentStreak = 0;
+        }
+      });
+
       return {
         sessionId: sessionData.sessionId,
         score: sessionData.score,
@@ -586,6 +603,8 @@ class SessionService {
         themeStats,
         failedQuestions,
         pointsEarned: Math.round(sessionData.score),
+        hasQCM,
+        streakCount: maxStreak,
       };
     } catch (error) {
       console.error('Erreur lors du calcul des statistiques:', error);

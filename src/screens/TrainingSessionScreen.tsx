@@ -22,7 +22,7 @@ import { spacing, typography, borderRadius, shadows } from '../styles/theme';
 import { TrainingStackScreenProps } from '../types/navigation';
 import { Ionicons } from '@expo/vector-icons';
 import { Timer } from '../components/Timer';
-import { sessionService, Question, UserAnswer } from '../services/sessionService';
+import { sessionService, Question, UserAnswer, SessionSettings } from '../services/sessionService';
 import { ButtonContainer } from '../components/ButtonContainer';
 import * as Haptics from 'expo-haptics';
 import { badgesService } from '../services/badgesService';
@@ -53,6 +53,23 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
     },
   };
   const { sousThemes = [], settings = defaultSettings } = route.params || {};
+
+  // Créer un objet SessionSettings à partir des settings pour sessionService
+  const sessionSettings: SessionSettings = {
+    questionType: settings.questionType || 'MIXTE',
+    timerEnabled: settings.timerEnabled || false,
+    timePerQuestion: settings.timePerQuestion || 60,
+    numberOfQuestions:
+      'numberOfQuestions' in settings
+        ? (settings as { numberOfQuestions?: number }).numberOfQuestions
+        : 10,
+    scoring: settings.scoring || {
+      correct: 1,
+      incorrect: -0.5,
+      noAnswer: -0.5,
+      partial: 0.5,
+    },
+  };
 
   // États
   const [loading, setLoading] = useState(true);
@@ -110,8 +127,8 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
       // Sinon, charger de nouvelles questions
       const loadedQuestions = await sessionService.loadQuestions(
         sousThemes || [],
-        settings?.questionType || 'MIXTE',
-        settings?.numberOfQuestions
+        sessionSettings.questionType,
+        sessionSettings.numberOfQuestions
       );
 
       if (loadedQuestions.length === 0) {
@@ -124,10 +141,6 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
 
       // Créer la session
       if (user) {
-        const sessionSettings = {
-          ...defaultSettings,
-          ...settings,
-        };
         const session = await sessionService.createSession(
           user.id,
           loadedQuestions,
@@ -167,10 +180,6 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
 
   const handleValidate = async () => {
     // Calculer le score
-    const sessionSettings = {
-      ...defaultSettings,
-      ...settings,
-    };
     const result = sessionService.calculateScore(currentQuestion, selectedAnswers, sessionSettings);
 
     // Créer la réponse utilisateur

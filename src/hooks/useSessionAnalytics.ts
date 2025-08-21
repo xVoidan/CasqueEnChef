@@ -13,6 +13,8 @@ export interface SessionStats {
   themeStats: ThemeStat[];
   failedQuestions: FailedQuestion[];
   pointsEarned: number;
+  hasQCM?: boolean;
+  streakCount?: number;
 }
 
 export interface ThemeStat {
