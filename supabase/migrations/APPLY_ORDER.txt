@@ -3,12 +3,12 @@ ORDRE D'APPLICATION DES MIGRATIONS CORRIGÉES
 
 ✅ MIGRATIONS À APPLIQUER (dans cet ordre):
 
-1️⃣ 20250820_add_rls_policies_v2.sql ⬅️ UTILISEZ CELUI-CI
+1️⃣ 20250820_add_rls_policies_v3.sql ⬅️ UTILISEZ CELUI-CI (DERNIÈRE VERSION)
    - Active RLS sur toutes les tables
    - Policies simplifiées SANS colonne "role" 
+   - ✅ CORRIGE l'erreur "column reference 'id' is ambiguous"
+   - Utilise des alias explicites (p.id, q.id, qz.id, s.id)
    - Compatible avec la structure actuelle
-   - Utilise auth.role() = 'service_role' pour l'admin
-   ✅ PAS D'ERREUR "column role does not exist"
 
 2️⃣ 20250820_optimize_quiz_queries_fixed.sql ✅ DÉJÀ APPLIQUÉ
    - Vue matérialisée pour les performances
@@ -23,8 +23,9 @@ ORDRE D'APPLICATION DES MIGRATIONS CORRIGÉES
    - Crée des fonctions de gestion admin
 
 ⚠️ NE PAS UTILISER:
-- 20250820_add_rls_policies.sql (erreur "role")
-- 20250820_add_rls_policies_fixed.sql (erreur "role")
+- 20250820_add_rls_policies.sql (erreur "column 'role' does not exist")
+- 20250820_add_rls_policies_fixed.sql (erreur "column 'role' does not exist")
+- 20250820_add_rls_policies_v2.sql (erreur "column reference 'id' is ambiguous")
 - 20250820_optimize_quiz_queries.sql (erreur "points_total")
 
 NOTES IMPORTANTES:
