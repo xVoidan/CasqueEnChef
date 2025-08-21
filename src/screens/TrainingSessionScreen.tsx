@@ -574,7 +574,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: colors.background }]}
-        edges={['top', 'left', 'right', 'bottom']}
+        edges={['top', 'left', 'right']}
       >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
