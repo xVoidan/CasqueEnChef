@@ -152,7 +152,7 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
               )}
 
               <Text style={styles.scoreNote}>
-                Note: {((stats.successRate * 20) / 100).toFixed(1)}/20
+                Note: {((stats.successRate * stats.totalQuestions) / 100).toFixed(1)}/{stats.totalQuestions}
               </Text>
               <Text style={styles.scoreMessage}>{scoreMessage}</Text>
             </Animated.View>

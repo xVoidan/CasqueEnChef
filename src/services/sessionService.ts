@@ -147,13 +147,18 @@ class SessionService {
     };
 
     // Sauvegarder dans la base de données
+    // Utiliser le nombre de questions configuré ou le nombre de questions disponibles, selon le plus petit
+    const targetQuestions = settings.numberOfQuestions ? 
+      Math.min(settings.numberOfQuestions, questions.length) : 
+      questions.length;
+    
     const { data, error } = await supabase
       .from('sessions')
       .insert({
         profile_id: userId,
         type_session: 'entrainement',
         score: 0,
-        nombre_questions: questions.length,
+        nombre_questions: targetQuestions,
         nombre_reponses_correctes: 0,
         temps_total: 0,
         statut: 'en_cours',
@@ -362,11 +367,10 @@ class SessionService {
       await AsyncStorage.removeItem(`${this.SESSION_KEY}${userId}`);
 
       // Retourner les données de session pour l'écran de rapport
-      // Pour une session abandonnée, ne compter que les questions répondues
-      // Utiliser numberOfQuestions s'il est défini, sinon utiliser le nombre réel de questions
-      const configuredQuestions = session.settings?.numberOfQuestions || session.questions.length;
-      const effectiveTotalQuestions =
-        status === 'abandonnee' ? session.answers.length : Math.min(configuredQuestions, session.questions.length);
+      // Le total de questions est basé sur le nombre de questions réellement posées/répondues
+      // Pas sur le nombre total de questions disponibles dans la base
+      const answeredQuestions = session.answers.length;
+      const effectiveTotalQuestions = answeredQuestions;
 
       return {
         sessionId,
