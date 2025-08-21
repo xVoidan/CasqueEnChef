@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+    paddingBottom: spacing.xl,
   },
   sectionTitle: {
     ...typography.h4,

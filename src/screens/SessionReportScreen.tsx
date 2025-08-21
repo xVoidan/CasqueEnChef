@@ -378,7 +378,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 140 }}
       >
         {/* Header avec tabs accessibles */}
         <View style={styles.header}>
@@ -448,7 +448,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
           onHome={() => navigation.navigate('HomeScreen' as never)}
           exportLoading={exportLoading}
           colors={colors}
-          style={{ marginTop: spacing.lg }}
+          style={{ marginTop: spacing.lg, marginBottom: spacing.xl }}
         />
       </ScrollView>
     </SafeAreaView>
