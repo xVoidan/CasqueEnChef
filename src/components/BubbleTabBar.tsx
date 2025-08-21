@@ -14,7 +14,6 @@ import { useTheme } from '../contexts/ThemeContext';
 import { shadows } from '../styles/theme';
 
 /* eslint-disable react-native/no-inline-styles */
-/* eslint-disable react-native/no-color-literals */
 
 const { width } = Dimensions.get('window');
 const TAB_BAR_WIDTH = width - 40;

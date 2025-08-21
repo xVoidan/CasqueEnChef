@@ -19,7 +19,6 @@ import { badgesService, Badge, Defi, Rang } from '../services/badgesService';
 import { spacing, typography, borderRadius, shadows } from '../styles/theme';
 
 /* eslint-disable react-native/no-inline-styles */
-/* eslint-disable react-native/no-color-literals */
 
 const { width } = Dimensions.get('window');
 

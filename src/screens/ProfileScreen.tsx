@@ -8,7 +8,6 @@ import { ProfileStackScreenProps } from '../types/navigation';
 import { Ionicons } from '@expo/vector-icons';
 
 /* eslint-disable react-native/no-inline-styles */
-/* eslint-disable react-native/no-color-literals */
 
 export const ProfileScreen: React.FC<ProfileStackScreenProps<'ProfileScreen'>> = ({
   navigation: _navigation,

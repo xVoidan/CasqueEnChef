@@ -1,4 +1,4 @@
-import React from /* eslint-disable react-native/no-inline-styles, react-native/no-color-literals */ 'react';
+import React from /* eslint-disable react-native/no-inline-styles */ 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';

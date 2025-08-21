@@ -23,7 +23,6 @@ import { ButtonContainer } from '../components/ButtonContainer';
 import * as Haptics from 'expo-haptics';
 
 /* eslint-disable react-native/no-inline-styles */
-/* eslint-disable react-native/no-color-literals */
 
 interface Theme extends DBTheme {
   sous_themes: SousTheme[];

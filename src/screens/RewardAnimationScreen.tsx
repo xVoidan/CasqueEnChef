@@ -1,5 +1,5 @@
 import React, {
-  /* eslint-disable react-hooks/exhaustive-deps, react-native/no-inline-styles, react-native/no-color-literals */ useEffect,
+  /* eslint-disable react-hooks/exhaustive-deps, react-native/no-inline-styles */ useEffect,
   useState,
 } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';

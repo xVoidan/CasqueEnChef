@@ -1,5 +1,5 @@
 import React, {
-  /* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/prefer-nullish-coalescing, react-native/no-inline-styles, react-native/no-color-literals */ useState,
+  /* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/prefer-nullish-coalescing, react-native/no-inline-styles */ useState,
   useEffect,
   useRef,
 } from 'react';

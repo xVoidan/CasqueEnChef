@@ -1,5 +1,5 @@
 import React, {
-  /* eslint-disable @typescript-eslint/no-misused-promises, react-native/no-inline-styles, react-native/no-color-literals */ useState,
+  /* eslint-disable @typescript-eslint/no-misused-promises, react-native/no-inline-styles */ useState,
 } from 'react';
 import {
   View,

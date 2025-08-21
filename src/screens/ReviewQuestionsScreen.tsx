@@ -1,5 +1,5 @@
 import React, {
-  /* eslint-disable @typescript-eslint/prefer-nullish-coalescing, react-native/no-color-literals */ useState,
+  /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */ useState,
 } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

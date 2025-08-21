@@ -31,7 +31,6 @@ import { spacing, typography, borderRadius, shadows } from '../styles/theme';
 import { HomeStackScreenProps } from '../types/navigation';
 
 /* eslint-disable react-native/no-inline-styles */
-/* eslint-disable react-native/no-color-literals */
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

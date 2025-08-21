@@ -1,4 +1,4 @@
-import React from /* eslint-disable react-native/no-inline-styles, react-native/no-color-literals */ 'react';
+import React from /* eslint-disable react-native/no-inline-styles */ 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';

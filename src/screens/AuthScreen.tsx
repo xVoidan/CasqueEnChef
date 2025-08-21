@@ -1,4 +1,4 @@
-import React, { /* eslint-disable react-native/no-color-literals */ useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
