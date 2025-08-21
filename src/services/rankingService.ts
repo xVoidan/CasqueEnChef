@@ -11,6 +11,7 @@ export interface RankingUser {
   points_total?: number;
   points_periode?: number;
   niveau: string;
+  grade_id?: number;
   concours_type?: string;
   evolution?: Evolution;
   est_utilisateur_actuel: boolean;
@@ -250,6 +251,7 @@ class RankingService {
           ? Math.floor(user.points / (type === 'hebdomadaire' ? 10 : 3))
           : undefined,
       niveau: index < 3 ? 'avance' : index < 6 ? 'intermediaire' : 'debutant',
+      grade_id: Math.min(15, Math.max(1, Math.floor(user.points / 2000) + 1)),
       concours_type:
         type === 'caporal'
           ? 'caporal'

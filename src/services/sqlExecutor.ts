@@ -17,44 +17,47 @@ export class SQLExecutor {
    */
   static async execute(sql: string): Promise<SQLResult> {
     const sqlLower = sql.toLowerCase().trim();
-    
+
     try {
       // SELECT
       if (sqlLower.startsWith('select')) {
         return await this.handleSelect(sql);
       }
-      
+
       // INSERT
       if (sqlLower.startsWith('insert')) {
         return await this.handleInsert(sql);
       }
-      
+
       // UPDATE
       if (sqlLower.startsWith('update')) {
         return await this.handleUpdate(sql);
       }
-      
+
       // DELETE
       if (sqlLower.startsWith('delete')) {
         return await this.handleDelete(sql);
       }
-      
+
       // CREATE OR REPLACE FUNCTION
       if (sqlLower.includes('create') && sqlLower.includes('function')) {
         return await this.handleFunction(sql);
       }
-      
+
       // Pour DDL et autres requêtes complexes
-      if (sqlLower.startsWith('create') || sqlLower.startsWith('alter') || sqlLower.startsWith('drop')) {
+      if (
+        sqlLower.startsWith('create') ||
+        sqlLower.startsWith('alter') ||
+        sqlLower.startsWith('drop')
+      ) {
         return await this.handleDDL(sql);
       }
-      
+
       // Essayer via RPC si disponible
       return await this.executeViaRPC(sql);
-      
     } catch (error) {
-      return { 
-        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      return {
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
       };
     }
   }
@@ -65,61 +68,79 @@ export class SQLExecutor {
     if (!tableMatch) {
       return { error: 'Table non trouvée dans SELECT' };
     }
-    
+
     const table = tableMatch[1];
     const selectMatch = sql.match(/select\s+(.*?)\s+from/i);
     const columns = selectMatch?.[1] === '*' ? '*' : selectMatch?.[1];
     const whereMatch = sql.match(/where\s+(.+?)(?:order|limit|group|$)/i);
     const limitMatch = sql.match(/limit\s+(\d+)/i);
     const orderMatch = sql.match(/order\s+by\s+(\w+)(?:\s+(asc|desc))?/i);
-    
+
     let query = supabase.from(table).select(columns || '*');
-    
+
     // Appliquer WHERE
     if (whereMatch) {
       const whereClause = whereMatch[1].trim();
       const conditions = whereClause.split(/\s+and\s+/i);
-      
+
       for (const condition of conditions) {
-        const condMatch = condition.match(/(\w+)\s*(=|!=|>|<|>=|<=|like|ilike)\s*['"]?([^'"]+)['"]?/i);
+        const condMatch = condition.match(
+          /(\w+)\s*(=|!=|>|<|>=|<=|like|ilike)\s*['"]?([^'"]+)['"]?/i
+        );
         if (condMatch) {
           const [, column, operator, value] = condMatch;
           const cleanValue = value.replace(/^['"]|['"]$/g, '');
-          
-          switch(operator.toLowerCase()) {
-            case '=': query = query.eq(column, cleanValue); break;
-            case '!=': query = query.neq(column, cleanValue); break;
-            case '>': query = query.gt(column, cleanValue); break;
-            case '<': query = query.lt(column, cleanValue); break;
-            case '>=': query = query.gte(column, cleanValue); break;
-            case '<=': query = query.lte(column, cleanValue); break;
-            case 'like': query = query.like(column, cleanValue); break;
-            case 'ilike': query = query.ilike(column, cleanValue); break;
+
+          switch (operator.toLowerCase()) {
+            case '=':
+              query = query.eq(column, cleanValue);
+              break;
+            case '!=':
+              query = query.neq(column, cleanValue);
+              break;
+            case '>':
+              query = query.gt(column, cleanValue);
+              break;
+            case '<':
+              query = query.lt(column, cleanValue);
+              break;
+            case '>=':
+              query = query.gte(column, cleanValue);
+              break;
+            case '<=':
+              query = query.lte(column, cleanValue);
+              break;
+            case 'like':
+              query = query.like(column, cleanValue);
+              break;
+            case 'ilike':
+              query = query.ilike(column, cleanValue);
+              break;
           }
         }
       }
     }
-    
+
     // ORDER BY
     if (orderMatch) {
       query = query.order(orderMatch[1], { ascending: orderMatch[2] !== 'desc' });
     }
-    
+
     // LIMIT
     if (limitMatch) {
       query = query.limit(parseInt(limitMatch[1]));
     }
-    
-    const { data, error, count } = await query;
-    
+
+    const { data, error } = await query;
+
     if (error) {
       return { error: error.message };
     }
-    
-    return { 
-      data, 
+
+    return {
+      data,
       count: data?.length ?? 0,
-      message: `${data?.length ?? 0} ligne(s) trouvée(s)`
+      message: `${data?.length ?? 0} ligne(s) trouvée(s)`,
     };
   }
 
@@ -129,7 +150,7 @@ export class SQLExecutor {
     if (!match) {
       return { error: 'Format INSERT non reconnu' };
     }
-    
+
     const [, table, columns, values] = match;
     const columnList = columns.split(',').map(c => c.trim());
     const valueList = values.split(',').map(v => {
@@ -139,35 +160,42 @@ export class SQLExecutor {
         return v.slice(1, -1);
       }
       // Nombres
-      if (!isNaN(Number(v))) return Number(v);
+      if (!isNaN(Number(v))) {
+        return Number(v);
+      }
       // Booléens
-      if (v.toLowerCase() === 'true') return true;
-      if (v.toLowerCase() === 'false') return false;
+      if (v.toLowerCase() === 'true') {
+        return true;
+      }
+      if (v.toLowerCase() === 'false') {
+        return false;
+      }
       // NULL
-      if (v.toLowerCase() === 'null') return null;
+      if (v.toLowerCase() === 'null') {
+        return null;
+      }
       // NOW()
-      if (v.toLowerCase() === 'now()') return new Date().toISOString();
+      if (v.toLowerCase() === 'now()') {
+        return new Date().toISOString();
+      }
       return v;
     });
-    
+
     const insertData: Record<string, unknown> = {};
     columnList.forEach((col, i) => {
       insertData[col] = valueList[i];
     });
-    
-    const { data, error } = await supabase
-      .from(table)
-      .insert(insertData)
-      .select();
-    
+
+    const { data, error } = await supabase.from(table).insert(insertData).select();
+
     if (error) {
       return { error: error.message };
     }
-    
-    return { 
-      data, 
+
+    return {
+      data,
       message: 'INSERT réussi',
-      count: data?.length ?? 0
+      count: data?.length ?? 0,
     };
   }
 
@@ -176,21 +204,23 @@ export class SQLExecutor {
     if (!match) {
       return { error: 'Format UPDATE non reconnu' };
     }
-    
+
     const [, table, setClause, whereClause] = match;
-    
+
     // Parser SET
     const updateData: Record<string, unknown> = {};
     const setPairs = setClause.split(',');
-    
+
     for (const pair of setPairs) {
       const [col, val] = pair.split('=').map(s => s.trim());
       let value: unknown = val;
-      
+
       // Nettoyer la valeur
       if (typeof value === 'string') {
-        if ((value.startsWith("'") && value.endsWith("'")) || 
-            (value.startsWith('"') && value.endsWith('"'))) {
+        if (
+          (value.startsWith("'") && value.endsWith("'")) ||
+          (value.startsWith('"') && value.endsWith('"'))
+        ) {
           value = value.slice(1, -1);
         } else if (!isNaN(Number(value))) {
           value = Number(value);
@@ -204,28 +234,28 @@ export class SQLExecutor {
           value = new Date().toISOString();
         }
       }
-      
+
       updateData[col] = value;
     }
-    
+
     // Parser WHERE simple
     let query = supabase.from(table).update(updateData);
-    
+
     const whereMatch = whereClause.match(/(\w+)\s*=\s*['"]?([^'"]+)['"]?/);
     if (whereMatch) {
       query = query.eq(whereMatch[1], whereMatch[2]);
     }
-    
+
     const { data, error } = await query.select();
-    
+
     if (error) {
       return { error: error.message };
     }
-    
-    return { 
-      data, 
+
+    return {
+      data,
       message: `${data?.length ?? 0} ligne(s) modifiée(s)`,
-      count: data?.length ?? 0
+      count: data?.length ?? 0,
     };
   }
 
@@ -234,11 +264,11 @@ export class SQLExecutor {
     if (!match) {
       return { error: 'Format DELETE non reconnu' };
     }
-    
+
     const [, table, whereClause] = match;
-    
+
     let query = supabase.from(table).delete();
-    
+
     if (whereClause) {
       const whereMatch = whereClause.match(/(\w+)\s*=\s*['"]?([^'"]+)['"]?/);
       if (whereMatch) {
@@ -247,17 +277,17 @@ export class SQLExecutor {
         return { error: 'WHERE clause non reconnue' };
       }
     }
-    
+
     const { data, error } = await query.select();
-    
+
     if (error) {
       return { error: error.message };
     }
-    
-    return { 
-      data, 
+
+    return {
+      data,
       message: `${data?.length ?? 0} ligne(s) supprimée(s)`,
-      count: data?.length ?? 0
+      count: data?.length ?? 0,
     };
   }
 
@@ -265,47 +295,46 @@ export class SQLExecutor {
     // Sauvegarder pour migration
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
     const filename = `${timestamp}_custom_function.sql`;
-    
-    console.log(`⚠️ Fonction SQL sauvegardée: supabase/migrations/${filename}`);
-    console.log('Pour l\'appliquer:');
-    console.log('1. Copier dans Supabase SQL Editor');
-    console.log('2. Ou utiliser: npx supabase migration up');
-    
+
+    // Fonction SQL sauvegardée dans supabase/migrations/${filename}
+    // Pour l'appliquer: Copier dans Supabase SQL Editor ou utiliser npx supabase migration up
+
     return {
       message: 'CREATE FUNCTION nécessite Supabase Dashboard',
-      data: [{ sql, filename }]
+      data: [{ sql, filename }],
     };
   }
 
   private static async handleDDL(sql: string): Promise<SQLResult> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
     const filename = `${timestamp}_ddl.sql`;
-    
-    console.log(`⚠️ DDL sauvegardé: supabase/migrations/${filename}`);
-    console.log('Pour l\'appliquer: Utiliser Supabase SQL Editor');
-    
+
+    // DDL sauvegardé dans supabase/migrations/${filename}
+    // Pour l'appliquer: Utiliser Supabase SQL Editor
+
     return {
       message: 'DDL nécessite Supabase Dashboard',
-      data: [{ sql, filename }]
+      data: [{ sql, filename }],
     };
   }
 
   private static async executeViaRPC(sql: string): Promise<SQLResult> {
     try {
       // Essayer d'exécuter via une fonction RPC si elle existe
-      const { data, error } = await supabase
-        .rpc('execute_sql', { query: sql });
-      
-      if (error) throw error;
-      
-      return { 
+      const { data, error } = await supabase.rpc('execute_sql', { query: sql });
+
+      if (error) {
+        throw error;
+      }
+
+      return {
         data: data as unknown[],
-        message: 'Exécuté via RPC'
+        message: 'Exécuté via RPC',
       };
     } catch {
       return {
         error: 'SQL complexe non supporté directement',
-        message: 'Utiliser Supabase Dashboard ou créer une fonction RPC'
+        message: 'Utiliser Supabase Dashboard ou créer une fonction RPC',
       };
     }
   }

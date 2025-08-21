@@ -10,7 +10,7 @@ import {
 } from '../types/navigation';
 import { HomeScreen } from '../screens/HomeScreen';
 import { RevisionScreen } from '../screens/RevisionScreen';
-import { RankingScreen } from '../screens/RankingScreen';
+import { RankingScreenV2 as RankingScreen } from '../screens/RankingScreenV2';
 // import { TrainingScreen } from '../screens/TrainingScreen'; // Not used directly
 import { TrainingConfigScreen } from '../screens/TrainingConfigScreen';
 import { TrainingSessionScreen } from '../screens/TrainingSessionScreen';

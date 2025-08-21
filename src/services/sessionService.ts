@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { pointsService } from './pointsService';
 
 export interface Question {
   id: number;
@@ -363,6 +364,28 @@ class SessionService {
             completed_at: new Date().toISOString(),
           })
           .eq('id', sessionId);
+
+        // Calculer et attribuer les points si la session est terminée
+        if (status === 'terminee') {
+          const tauxReussite =
+            session.answers.length > 0 ? (correctAnswers / session.answers.length) * 100 : 0;
+
+          try {
+            await pointsService.calculateAndAwardPoints(
+              userId,
+              session.score,
+              tauxReussite,
+              totalTime,
+              session.answers.length
+            );
+
+            // Vérifier les bonus de série
+            await pointsService.checkAndAwardStreakBonus(userId);
+          } catch (error) {
+            console.error('Erreur lors du calcul des points:', error);
+            // Ne pas bloquer la fin de session si le calcul des points échoue
+          }
+        }
       }
 
       // Nettoyer la session locale
