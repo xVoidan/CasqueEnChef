@@ -354,26 +354,27 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
         </Animated.View>
 
         {/* Stats détaillées améliorées */}
+        <Text style={[styles.sectionTitle, { color: colors.text, marginHorizontal: spacing.lg, marginBottom: spacing.md }]}>Performance détaillée</Text>
         <Animated.View
           entering={FadeInUp.duration(600).delay(800)}
           style={styles.detailedStatsGrid}
         >
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-            <Ionicons name="speedometer" size={20} color={COLORS.info} />
+            <Ionicons name="speedometer" size={24} color={COLORS.info} />
             <Text style={[styles.statValue, { color: colors.text }]}>
-              {stats.averageTime ? `${stats.averageTime}s` : '--'}
+              {stats.averageTime ? `${stats.averageTime.toFixed(1)}s` : '--'}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Moy/Question</Text>
           </View>
 
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-            <Ionicons name="analytics" size={20} color={COLORS.success} />
+            <Ionicons name="analytics" size={24} color={COLORS.success} />
             <Text style={[styles.statValue, { color: colors.text }]}>{stats.correctAnswers}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Correctes</Text>
           </View>
 
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-            <Ionicons name="time" size={20} color={COLORS.warning} />
+            <Ionicons name="time" size={24} color={COLORS.warning} />
             <Text style={[styles.statValue, { color: colors.text }]}>
               {stats.totalTime ? formatTime(stats.totalTime) : '--:--'}
             </Text>
@@ -381,21 +382,25 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
           </View>
 
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-            <Ionicons name="trending-up" size={20} color={COLORS.primary} />
+            <Ionicons name="trending-up" size={24} color={COLORS.primary} />
             <Text style={[styles.statValue, { color: colors.text }]}>+{displayScore}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Points XP</Text>
           </View>
 
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-            <Ionicons name="fitness" size={20} color="#9333EA" />
-            <Text style={[styles.statValue, { color: colors.text }]}>85%</Text>
+            <Ionicons name="fitness" size={24} color="#9333EA" />
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {Math.round((stats.correctAnswers / stats.totalQuestions) * 100)}%
+            </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Efficacité</Text>
           </View>
 
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-            <Ionicons name="pulse" size={20} color="#EC4899" />
-            <Text style={[styles.statValue, { color: colors.text }]}>8/10</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Constance</Text>
+            <Ionicons name="pulse" size={24} color="#EC4899" />
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {stats.streakCount}/{stats.totalQuestions}
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Série</Text>
           </View>
         </Animated.View>
       </ScrollView>
@@ -677,26 +682,31 @@ const styles = StyleSheet.create({
   },
   detailedStatsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
     paddingHorizontal: spacing.lg,
-    gap: spacing.xs,
+    gap: spacing.sm,
     marginBottom: spacing.lg,
+    justifyContent: 'space-between',
   },
   statCard: {
-    flex: 1,
-    minWidth: 90,
+    width: (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 2) / 3,
+    minWidth: 95,
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
+    marginBottom: spacing.sm,
     ...shadows.sm,
   },
   statValue: {
     ...typography.bodyBold,
-    marginVertical: spacing.xs,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+    fontSize: 16,
   },
   statLabel: {
     ...typography.caption,
     textAlign: 'center',
+    fontSize: 11,
   },
   quickActionIconRed: {
     backgroundColor: '#FF6B6B20',
