@@ -361,10 +361,14 @@ class SessionService {
       await AsyncStorage.removeItem(`${this.SESSION_KEY}${userId}`);
 
       // Retourner les données de session pour l'écran de rapport
+      // Pour une session abandonnée, ne compter que les questions répondues
+      const effectiveTotalQuestions =
+        status === 'abandonnee' ? session.answers.length : session.questions.length;
+
       return {
         sessionId,
         score: session.score,
-        totalQuestions: session.questions.length,
+        totalQuestions: effectiveTotalQuestions,
         correctAnswers,
         totalTime,
         answers: session.answers,
@@ -463,7 +467,14 @@ class SessionService {
       const themeStatsMap = new Map();
 
       sessionData.questions.forEach((question, index) => {
+        // Pour une session abandonnée, ne traiter que les questions répondues
         const answer = sessionData.answers[index];
+
+        // Si pas de réponse (session abandonnée), ignorer cette question dans les stats
+        if (!answer && index >= sessionData.answers.length) {
+          return;
+        }
+
         const sousTheme = sousThemesData?.find(st => st.id === question.sous_theme_id);
 
         if (sousTheme?.theme) {
@@ -520,6 +531,7 @@ class SessionService {
 
       // Récupérer les questions échouées avec leurs détails
       const failedQuestions = sessionData.questions
+        .slice(0, sessionData.answers.length) // Ne prendre que les questions répondues
         .map((question, index) => {
           const answer = sessionData.answers[index];
           if (!answer || answer.isCorrect) {
@@ -549,14 +561,21 @@ class SessionService {
         })
         .filter(q => q !== null);
 
+      // Pour le calcul de la réussite et du temps moyen, utiliser le nombre de questions répondues
+      const answeredQuestions = Math.min(sessionData.answers.length, sessionData.totalQuestions);
+      const successRate =
+        answeredQuestions > 0 ? (sessionData.correctAnswers / answeredQuestions) * 100 : 0;
+      const averageTime =
+        answeredQuestions > 0 ? Math.floor(sessionData.totalTime / answeredQuestions) : 0;
+
       return {
         sessionId: sessionData.sessionId,
         score: sessionData.score,
         totalQuestions: sessionData.totalQuestions,
         correctAnswers: sessionData.correctAnswers,
-        successRate: (sessionData.correctAnswers / sessionData.totalQuestions) * 100,
+        successRate: successRate,
         totalTime: sessionData.totalTime,
-        averageTime: Math.floor(sessionData.totalTime / sessionData.totalQuestions),
+        averageTime: averageTime,
         themeStats,
         failedQuestions,
         pointsEarned: Math.round(sessionData.score),

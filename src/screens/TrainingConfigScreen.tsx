@@ -41,6 +41,7 @@ interface SessionSettings {
   questionType: 'QCU' | 'QCM' | 'MIXTE';
   timerEnabled: boolean;
   timePerQuestion: number;
+  numberOfQuestions: number;
   scoring: {
     correct: number;
     incorrect: number;
@@ -57,11 +58,13 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
   const [loading, setLoading] = useState(true);
   const [themes, setThemes] = useState<Theme[]>([]);
   const [timerInputValue, setTimerInputValue] = useState('60');
+  const [numberOfQuestionsValue, setNumberOfQuestionsValue] = useState('20');
   const [settings, setSettings] = useState<SessionSettings>({
     useDefaults: true,
     questionType: 'MIXTE',
-    timerEnabled: true,
+    timerEnabled: false,
     timePerQuestion: 60,
+    numberOfQuestions: 20,
     scoring: {
       correct: 1,
       incorrect: -0.5,
@@ -102,7 +105,8 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
 
   useEffect(() => {
     setTimerInputValue(settings.timePerQuestion.toString());
-  }, [settings.timePerQuestion]);
+    setNumberOfQuestionsValue(settings.numberOfQuestions.toString());
+  }, [settings.timePerQuestion, settings.numberOfQuestions]);
 
   const loadThemesAndQuestions = async () => {
     try {
@@ -225,10 +229,6 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
         ),
       0
     );
-  };
-
-  const getSelectedThemesCount = () => {
-    return themes.filter(t => t.isSelected).length;
   };
 
   const ScoreInput = ({
@@ -463,6 +463,37 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
 
           <View style={styles.separator} />
 
+          <View style={styles.timerInput}>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Nombre de questions
+            </Text>
+            <TextInput
+              style={[
+                styles.numberInput,
+                {
+                  color: colors.text,
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                },
+              ]}
+              value={numberOfQuestionsValue}
+              onChangeText={setNumberOfQuestionsValue}
+              onBlur={() => {
+                const num = parseInt(numberOfQuestionsValue);
+                if (!isNaN(num) && num >= 1 && num <= 100) {
+                  setSettings(prev => ({ ...prev, numberOfQuestions: num }));
+                } else {
+                  setNumberOfQuestionsValue(settings.numberOfQuestions.toString());
+                }
+              }}
+              keyboardType="numeric"
+              maxLength={3}
+              placeholder="20"
+            />
+          </View>
+
+          <View style={styles.separator} />
+
           <View style={styles.settingRow}>
             <Text style={[styles.settingLabel, { color: colors.text }]}>Chronomètre</Text>
             <Switch
@@ -575,7 +606,10 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={['top', 'left', 'right', 'bottom']}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -584,7 +618,10 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right', 'bottom']}
+    >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -596,20 +633,6 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.statsBar, { backgroundColor: colors.surface }]}>
-          <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>
-              {getSelectedThemesCount()}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Thèmes</Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>{getTotalQuestions()}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Questions</Text>
-          </View>
-        </View>
-
         <Text style={[styles.sectionHeader, { color: colors.text }]}>Sélection des thèmes</Text>
         {themes.map(renderThemeItem)}
 
@@ -656,29 +679,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  statsBar: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    ...shadows.sm,
-  },
-  stat: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    ...typography.h2,
-  },
-  statLabel: {
-    ...typography.small,
-    marginTop: spacing.xs,
-  },
-  statDivider: {
-    width: 1,
-    marginHorizontal: spacing.md,
   },
   sectionHeader: {
     ...typography.bodyBold,

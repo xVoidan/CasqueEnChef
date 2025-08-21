@@ -242,7 +242,10 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 
   if (loading || !stats) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={['top', 'left', 'right']}
+      >
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: colors.text }]}>
             Calcul de vos résultats...
@@ -257,8 +260,14 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
   const displayScore = Math.max(0, stats.score); // Éviter l'affichage de scores négatifs
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right']}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: spacing.sm }}
+      >
         {/* Header avec score principal */}
         <Animated.View entering={FadeInDown.duration(600).delay(200)} style={styles.header}>
           <LinearGradient
@@ -279,6 +288,11 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
                   {getGradeEmoji(stats.successRate)}
                 </Animated.Text>
               </View>
+              {isAbandoned && (
+                <Text style={[styles.abandonedText, { color: colors.textSecondary }]}>
+                  (Session abandonnée)
+                </Text>
+              )}
               <Text style={styles.scoreNote}>
                 Note: {((stats.successRate * 20) / 100).toFixed(1)}/20
               </Text>
@@ -587,6 +601,12 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: '#FFFFFF',
     opacity: 0.9,
+  },
+  abandonedText: {
+    ...typography.body,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+    opacity: 0.8,
   },
   statsCard: {
     marginHorizontal: spacing.lg,

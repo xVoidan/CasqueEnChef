@@ -110,7 +110,8 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
       // Sinon, charger de nouvelles questions
       const loadedQuestions = await sessionService.loadQuestions(
         sousThemes || [],
-        settings?.questionType || 'MIXTE'
+        settings?.questionType || 'MIXTE',
+        settings?.numberOfQuestions
       );
 
       if (loadedQuestions.length === 0) {
@@ -571,7 +572,10 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={['top', 'left', 'right']}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
@@ -587,7 +591,10 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right']}
+    >
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
@@ -604,6 +611,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
         <View style={styles.headerRight}>
           {settings.timerEnabled && !showCorrection && (
             <Timer
+              key={`timer-${currentQuestionIndex}`}
               duration={settings.timePerQuestion}
               onTimeUp={() => void handleValidate()}
               isPaused={isPaused}
