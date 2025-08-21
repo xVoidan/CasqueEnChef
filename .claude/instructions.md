@@ -5,6 +5,27 @@
 - Toujours analyser le projet au démarrage
 - Pas de fichiers .md d'explication, code uniquement
 
+## Capacités SQL Supabase
+
+### ✅ Exécution automatique via SDK
+- SELECT, INSERT, UPDATE, DELETE avec conditions
+- Jointures et relations via select()
+- Filtres avancés (gte, lte, in, or, ilike)
+- Count et agrégations basiques
+- Bulk operations et UPSERT
+
+### 📝 SQL nécessitant Supabase Dashboard
+Pour DDL et fonctions (CREATE TABLE, ALTER, CREATE FUNCTION):
+1. Service SQLExecutor génère le SQL
+2. Sauvegarde dans supabase/migrations/
+3. Affiche le SQL à copier dans Dashboard
+
+### 🔧 Utilisation SQL
+```typescript
+import SQLExecutor from '@/services/sqlExecutor';
+// Exécuter: await SQLExecutor.execute("SELECT * FROM profiles");
+```
+
 ## Workflow
 
 ### NOUVELLES FONCTIONNALITÉS → Push automatique
