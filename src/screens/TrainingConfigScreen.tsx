@@ -608,7 +608,7 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: colors.background }]}
-        edges={['top', 'left', 'right', 'bottom']}
+        edges={['top']}
       >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -620,7 +620,7 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right', 'bottom']}
+      edges={['top']}
     >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -640,7 +640,11 @@ export const TrainingConfigScreen: React.FC<TrainingStackScreenProps<'TrainingCo
         {renderSettings()}
       </ScrollView>
 
-      <ButtonContainer backgroundColor={colors.background} borderColor={colors.border}>
+      <ButtonContainer
+        backgroundColor={colors.background}
+        borderColor={colors.border}
+        floating={false}
+      >
         <TouchableOpacity
           style={[
             styles.startButton,

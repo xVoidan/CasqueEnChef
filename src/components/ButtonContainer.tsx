@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ViewStyle, StyleSheet } from 'react-native';
+import { View, ViewStyle, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../styles/theme';
 
@@ -11,6 +11,7 @@ interface ButtonContainerProps {
   backgroundColor?: string;
   borderColor?: string;
   hasBorder?: boolean;
+  floating?: boolean; // Option pour un bouton flottant
 }
 
 export const ButtonContainer: React.FC<ButtonContainerProps> = ({
@@ -19,22 +20,39 @@ export const ButtonContainer: React.FC<ButtonContainerProps> = ({
   backgroundColor,
   borderColor,
   hasBorder = true,
+  floating = false,
 }) => {
   const insets = useSafeAreaInsets();
 
-  // Assurer que le bouton est bien au-dessus de la barre de navigation
-  // Si insets.bottom est 0 (pas de barre de navigation), on met un padding minimal
-  // Si insets.bottom > 0 (barre de navigation présente), on ajoute les insets + un padding généreux pour éviter tout chevauchement
-  const dynamicPaddingBottom =
-    insets.bottom > 0 ? insets.bottom + spacing.xl + spacing.lg : spacing.lg;
+  // Approche simplifiée : padding fixe qui fonctionne bien avec la navigation
+  // On utilise un calcul simple qui garantit la visibilité
+  const bottomPadding = Math.max(90, insets.bottom + 70); // 90px minimum, ou insets + 70px
 
+  if (floating) {
+    // Style flottant pour les boutons qui doivent être au-dessus du contenu
+    return (
+      <View
+        style={[
+          styles.floatingContainer,
+          {
+            bottom: bottomPadding - 20, // Position absolue ajustée
+            backgroundColor: backgroundColor ?? 'transparent',
+          },
+          style,
+        ]}
+      >
+        {children}
+      </View>
+    );
+  }
+
+  // Style standard avec padding
   return (
     <View
       style={[
+        styles.standardContainer,
         {
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.sm,
-          paddingBottom: dynamicPaddingBottom,
+          paddingBottom: bottomPadding,
           borderTopWidth: hasBorder ? StyleSheet.hairlineWidth : 0,
           borderTopColor: borderColor,
           backgroundColor,
@@ -46,3 +64,18 @@ export const ButtonContainer: React.FC<ButtonContainerProps> = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  standardContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  floatingContainer: {
+    position: 'absolute',
+    left: spacing.lg,
+    right: spacing.lg,
+    paddingHorizontal: 0,
+    zIndex: 1000,
+    elevation: Platform.OS === 'android' ? 5 : 0,
+  },
+});
