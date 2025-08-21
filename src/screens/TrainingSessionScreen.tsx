@@ -284,11 +284,11 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
         }
       } else {
         // En cas d'erreur, retour simple
-        navigation.navigate('TrainingList');
+        navigation.navigate('HomeScreen' as never);
       }
     } else {
       // Si pas de données de session, retour simple
-      navigation.navigate('TrainingList');
+      navigation.navigate('HomeScreen' as never);
     }
   };
 
@@ -311,7 +311,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
           onPress: () => {
             void (async () => {
               if (!user) {
-                navigation.navigate('TrainingList');
+                navigation.navigate('HomeScreen' as never);
                 return;
               }
 
@@ -333,10 +333,10 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
                     isAbandoned: true,
                   });
                 } else {
-                  navigation.navigate('TrainingList');
+                  navigation.navigate('HomeScreen' as never);
                 }
               } else {
-                navigation.navigate('TrainingList');
+                navigation.navigate('HomeScreen' as never);
               }
             })();
           },
@@ -349,7 +349,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
               if (user) {
                 await sessionService.endSession(user.id, sessionId, 'abandonnee');
               }
-              navigation.navigate('TrainingList');
+              navigation.navigate('HomeScreen' as never);
             })();
           },
         },
@@ -546,7 +546,7 @@ export const TrainingSessionScreen: React.FC<TrainingStackScreenProps<'TrainingS
                   await sessionService.saveSessionLocally(user.id, sessionData);
                 }
                 setIsPaused(false);
-                navigation.navigate('TrainingList');
+                navigation.navigate('HomeScreen' as never);
               })();
             }}
           >
