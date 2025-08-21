@@ -244,7 +244,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: colors.background }]}
-        edges={['top', 'left', 'right']}
+        edges={['top', 'left', 'right', 'bottom']}
       >
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -262,11 +262,11 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}
+      edges={['top', 'left', 'right', 'bottom']}
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: spacing.sm }}
+        contentContainerStyle={{ paddingTop: spacing.sm, paddingBottom: spacing.xl }}
       >
         {/* Header avec score principal */}
         <Animated.View entering={FadeInDown.duration(600).delay(200)} style={styles.header}>
@@ -570,11 +570,11 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   scoreCard: {
-    padding: spacing.xl,
+    padding: spacing.lg,
     borderRadius: borderRadius.xl,
     alignItems: 'center',
   },
@@ -589,12 +589,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   scoreText: {
-    fontSize: 48,
+    fontSize: 36,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
   gradeEmoji: {
-    fontSize: 36,
+    fontSize: 28,
     marginLeft: spacing.md,
   },
   scoreNote: {
