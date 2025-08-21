@@ -80,7 +80,8 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
     onActionPress,
   }) => {
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
-    const displayScore = Math.max(0, stats.score);
+    // Afficher le score réel, même s'il est négatif
+    const displayScore = stats.score;
 
     // Calculer les métriques de progression
     const progressToNextRank = 75; // Exemple: 75% vers le prochain rang
@@ -383,7 +384,9 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
 
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Ionicons name="trending-up" size={24} color={COLORS.primary} />
-            <Text style={[styles.statValue, { color: colors.text }]}>+{displayScore}</Text>
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {displayScore >= 0 ? `+${displayScore}` : `${displayScore}`}
+            </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Points XP</Text>
           </View>
 

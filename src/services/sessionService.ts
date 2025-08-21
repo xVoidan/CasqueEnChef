@@ -50,6 +50,7 @@ export interface SessionSettings {
   questionType: 'QCU' | 'QCM' | 'MIXTE';
   timerEnabled: boolean;
   timePerQuestion: number;
+  numberOfQuestions?: number;
   scoring: {
     correct: number;
     incorrect: number;
@@ -362,8 +363,10 @@ class SessionService {
 
       // Retourner les données de session pour l'écran de rapport
       // Pour une session abandonnée, ne compter que les questions répondues
+      // Utiliser numberOfQuestions s'il est défini, sinon utiliser le nombre réel de questions
+      const configuredQuestions = session.settings?.numberOfQuestions || session.questions.length;
       const effectiveTotalQuestions =
-        status === 'abandonnee' ? session.answers.length : session.questions.length;
+        status === 'abandonnee' ? session.answers.length : Math.min(configuredQuestions, session.questions.length);
 
       return {
         sessionId,
