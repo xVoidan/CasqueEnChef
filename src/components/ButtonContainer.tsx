@@ -24,8 +24,9 @@ export const ButtonContainer: React.FC<ButtonContainerProps> = ({
 
   // Assurer que le bouton est bien au-dessus de la barre de navigation
   // Si insets.bottom est 0 (pas de barre de navigation), on met un padding minimal
-  // Si insets.bottom > 0 (barre de navigation présente), on ajoute les insets + un petit padding
-  const dynamicPaddingBottom = insets.bottom > 0 ? insets.bottom + spacing.md : spacing.lg;
+  // Si insets.bottom > 0 (barre de navigation présente), on ajoute les insets + un padding généreux pour éviter tout chevauchement
+  const dynamicPaddingBottom =
+    insets.bottom > 0 ? insets.bottom + spacing.xl + spacing.lg : spacing.lg;
 
   return (
     <View

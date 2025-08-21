@@ -569,22 +569,21 @@ const styles = StyleSheet.create({
     ...typography.body,
   },
   header: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
     paddingBottom: spacing.xs,
     marginBottom: spacing.xs,
   },
   scoreCard: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
   },
   scoreTitle: {
-    ...typography.body,
+    ...typography.bodyBold,
     color: '#FFFFFF',
     marginBottom: spacing.xs,
-    fontWeight: '600',
   },
   scoreContainer: {
     flexDirection: 'row',
@@ -592,12 +591,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   scoreText: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
   gradeEmoji: {
-    fontSize: 20,
+    fontSize: 26,
     marginLeft: spacing.sm,
   },
   scoreNote: {
