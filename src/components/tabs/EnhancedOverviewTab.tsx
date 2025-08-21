@@ -22,6 +22,14 @@ import { ThemeColors } from '../../types/theme.types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Couleurs pour le barème
+const BAREME_COLORS = {
+  correct: '#10B981',
+  incorrect: '#EF4444',
+  noAnswer: '#F59E0B',
+  partial: '#3B82F6',
+};
+
 // Nouvelles interfaces pour les fonctionnalités avancées
 interface ComparisonMetrics {
   userAverage: number;
@@ -60,6 +68,12 @@ interface EnhancedOverviewTabProps {
   comparisonMetrics?: ComparisonMetrics;
   insights?: InsightData[];
   onActionPress?: (action: string) => void;
+  scoring?: {
+    correct: number;
+    incorrect: number;
+    noAnswer: number;
+    partial: number;
+  };
 }
 
 export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
@@ -78,6 +92,7 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
     comparisonMetrics,
     insights = [],
     onActionPress,
+    scoring,
   }) => {
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
     // Afficher le score réel, même s'il est négatif
@@ -152,12 +167,73 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
               )}
 
               <Text style={styles.scoreNote}>
-                Note: {((stats.successRate * stats.totalQuestions) / 100).toFixed(1)}/{stats.totalQuestions}
+                Note: {((stats.successRate * stats.totalQuestions) / 100).toFixed(1)}/
+                {stats.totalQuestions}
               </Text>
               <Text style={styles.scoreMessage}>{scoreMessage}</Text>
             </Animated.View>
           </LinearGradient>
         </Animated.View>
+
+        {/* Section Barème */}
+        {scoring && (
+          <Animated.View
+            entering={FadeInUp.duration(600).delay(250)}
+            style={[styles.baremeCard, { backgroundColor: colors.surface }]}
+          >
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>📝 Barème utilisé</Text>
+            <View style={styles.baremeGrid}>
+              <View style={styles.baremeItem}>
+                <View
+                  style={[styles.baremeIndicator, { backgroundColor: BAREME_COLORS.correct }]}
+                />
+                <Text style={[styles.baremeLabel, { color: colors.textSecondary }]}>
+                  Bonne réponse
+                </Text>
+                <Text style={[styles.baremeValue, { color: colors.text }]}>
+                  {scoring.correct > 0 ? '+' : ''}
+                  {scoring.correct} point{Math.abs(scoring.correct) !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              <View style={styles.baremeItem}>
+                <View
+                  style={[styles.baremeIndicator, { backgroundColor: BAREME_COLORS.incorrect }]}
+                />
+                <Text style={[styles.baremeLabel, { color: colors.textSecondary }]}>
+                  Mauvaise réponse
+                </Text>
+                <Text style={[styles.baremeValue, { color: colors.text }]}>
+                  {scoring.incorrect} point{Math.abs(scoring.incorrect) !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              <View style={styles.baremeItem}>
+                <View
+                  style={[styles.baremeIndicator, { backgroundColor: BAREME_COLORS.noAnswer }]}
+                />
+                <Text style={[styles.baremeLabel, { color: colors.textSecondary }]}>
+                  Sans réponse
+                </Text>
+                <Text style={[styles.baremeValue, { color: colors.text }]}>
+                  {scoring.noAnswer} point{Math.abs(scoring.noAnswer) !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              {scoring.partial !== 0 && (
+                <View style={styles.baremeItem}>
+                  <View
+                    style={[styles.baremeIndicator, { backgroundColor: BAREME_COLORS.partial }]}
+                  />
+                  <Text style={[styles.baremeLabel, { color: colors.textSecondary }]}>
+                    Réponse partielle
+                  </Text>
+                  <Text style={[styles.baremeValue, { color: colors.text }]}>
+                    {scoring.partial > 0 ? '+' : ''}
+                    {scoring.partial} point{Math.abs(scoring.partial) !== 1 ? 's' : ''}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </Animated.View>
+        )}
 
         {/* Nouvelle section: Progression & Rang */}
         <Animated.View
@@ -355,7 +431,14 @@ export const EnhancedOverviewTab = memo<EnhancedOverviewTabProps>(
         </Animated.View>
 
         {/* Stats détaillées améliorées */}
-        <Text style={[styles.sectionTitle, { color: colors.text, marginHorizontal: spacing.lg, marginBottom: spacing.md }]}>Performance détaillée</Text>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: colors.text, marginHorizontal: spacing.lg, marginBottom: spacing.md },
+          ]}
+        >
+          Performance détaillée
+        </Text>
         <Animated.View
           entering={FadeInUp.duration(600).delay(800)}
           style={styles.detailedStatsGrid}
@@ -719,6 +802,40 @@ const styles = StyleSheet.create({
   },
   quickActionIconYellow: {
     backgroundColor: '#FFD93D20',
+  },
+  baremeCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: borderRadius.xl,
+    ...shadows.sm,
+  },
+  baremeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  baremeItem: {
+    flex: 1,
+    minWidth: (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 3) / 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  baremeIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: spacing.sm,
+  },
+  baremeLabel: {
+    ...typography.caption,
+    flex: 1,
+  },
+  baremeValue: {
+    ...typography.bodyBold,
+    fontSize: 14,
   },
 });
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Text, TextStyle } from 'react-native';
+import { TextStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useDerivedValue,
@@ -61,7 +61,9 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
 
   return (
     <Animated.Text style={[style, animatedStyle]}>
-      {prefix}{displayValue.toFixed(decimals)}{suffix}
+      {prefix}
+      {displayValue.toFixed(decimals)}
+      {suffix}
     </Animated.Text>
   );
 };

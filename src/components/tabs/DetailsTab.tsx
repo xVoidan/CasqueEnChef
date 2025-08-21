@@ -159,8 +159,8 @@ export const DetailsTab = memo<DetailsTabProps>(({ stats, colors, onReviewQuesti
             </Text>
           </View>
 
-          <ScrollView 
-            style={styles.failedQuestionsList} 
+          <ScrollView
+            style={styles.failedQuestionsList}
             nestedScrollEnabled={true}
             showsVerticalScrollIndicator={true}
           >

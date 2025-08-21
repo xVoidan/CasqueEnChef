@@ -148,10 +148,10 @@ class SessionService {
 
     // Sauvegarder dans la base de données
     // Utiliser le nombre de questions configuré ou le nombre de questions disponibles, selon le plus petit
-    const targetQuestions = settings.numberOfQuestions ? 
-      Math.min(settings.numberOfQuestions, questions.length) : 
-      questions.length;
-    
+    const targetQuestions = settings.numberOfQuestions
+      ? Math.min(settings.numberOfQuestions, questions.length)
+      : questions.length;
+
     const { data, error } = await supabase
       .from('sessions')
       .insert({

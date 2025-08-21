@@ -55,15 +55,15 @@ const Bar: React.FC<{
       {showValues && <Text style={styles.value}>{Math.round(item.value)}%</Text>}
       <View style={[styles.barWrapper, { height }]}>
         <View style={[styles.barBackground, { height, width: barWidth * 0.7 }]} />
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.bar, 
-            { 
+            styles.bar,
+            {
               backgroundColor: item.color,
               width: barWidth * 0.7,
-            }, 
-            animatedStyle
-          ]} 
+            },
+            animatedStyle,
+          ]}
         />
       </View>
       <Text style={styles.label} numberOfLines={2}>

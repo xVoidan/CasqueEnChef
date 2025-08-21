@@ -38,6 +38,7 @@ import { ActionButtons } from '../components/ActionButtons';
 
 // Services
 import { ExportService } from '../services/exportService';
+import { statsService } from '../services/statsService';
 
 // Styles et Types
 import { typography, spacing, borderRadius } from '../styles/theme';
@@ -64,6 +65,13 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
   const [exportLoading, setExportLoading] = useState(false);
 
   const isAbandoned = route.params?.isAbandoned ?? false;
+  const sessionParams = route.params?.sessionParams;
+  const scoring = sessionParams?.settings?.scoring ?? {
+    correct: 1,
+    incorrect: -0.5,
+    noAnswer: -0.5,
+    partial: 0.5,
+  };
   const confettiRef = useRef<ConfettiCannon>(null);
 
   // Animations
@@ -225,20 +233,51 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
   }, [stats, user]);
 
   // Générer les données de comparaison
-  const comparisonMetrics = useMemo(() => {
-    if (!stats) {
-      return null;
-    }
-    return {
-      userAverage: 75, // À calculer depuis l'historique
-      globalAverage: 68,
-      personalBest: 92,
-      targetScore: 80,
-      percentile: 15,
-      trend: 12,
-      streak: 7,
+  const [comparisonMetrics, setComparisonMetrics] = useState<{
+    userAverage: number;
+    globalAverage: number;
+    personalBest: number;
+    targetScore: number;
+    percentile: number;
+    trend: number;
+    streak: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const loadComparisonMetrics = async () => {
+      if (!stats || !user) {
+        setComparisonMetrics(null);
+        return;
+      }
+
+      try {
+        const comparison = await statsService.getSessionComparison(user.id, stats.score);
+        setComparisonMetrics({
+          userAverage: comparison.userAverage,
+          globalAverage: comparison.globalAverage,
+          personalBest: comparison.personalBest,
+          targetScore: 80, // Objectif par défaut
+          percentile: comparison.percentile,
+          trend: comparison.trend,
+          streak: comparison.streak,
+        });
+      } catch (error) {
+        console.error('Erreur chargement métriques de comparaison:', error);
+        // Valeurs par défaut en cas d'erreur
+        setComparisonMetrics({
+          userAverage: 75,
+          globalAverage: 68,
+          personalBest: 92,
+          targetScore: 80,
+          percentile: 15,
+          trend: 0,
+          streak: 0,
+        });
+      }
     };
-  }, [stats]);
+
+    void loadComparisonMetrics();
+  }, [stats, user]);
 
   // Générer les insights
   const insights = useMemo(() => {
@@ -376,10 +415,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
         onClose={() => setReviewModalVisible(false)}
       />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 140 }}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header avec tabs accessibles */}
         <View style={styles.header}>
           <View style={styles.tabsContainer} accessibilityRole="tablist">
@@ -427,6 +463,7 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
             isAbandoned={isAbandoned}
             colors={colors}
             celebrationAnimatedStyle={celebrationAnimatedStyle}
+            scoring={scoring}
             starAnimatedStyle={starAnimatedStyle}
             comparisonMetrics={comparisonMetrics}
             insights={insights}
@@ -458,6 +495,9 @@ export const SessionReportScreen: React.FC<TrainingStackScreenProps<'SessionRepo
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 140,
   },
   loadingContainer: {
     flex: 1,

@@ -171,9 +171,7 @@ export const ReviewQuestionsModal: React.FC<ReviewQuestionsModalProps> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.contentContainer}
           >
-            <Animated.View
-              style={[styles.questionCard, { backgroundColor: colors.surface }]}
-            >
+            <Animated.View style={[styles.questionCard, { backgroundColor: colors.surface }]}>
               {/* Question Header */}
               <View style={styles.questionHeader}>
                 <View style={styles.questionTags}>
@@ -238,7 +236,11 @@ export const ReviewQuestionsModal: React.FC<ReviewQuestionsModalProps> = ({
                 </TouchableOpacity>
               ) : (
                 <Animated.View
-                  style={[styles.explanationCard, { backgroundColor: `${colors.info}10` }, explanationStyle]}
+                  style={[
+                    styles.explanationCard,
+                    { backgroundColor: `${colors.info}10` },
+                    explanationStyle,
+                  ]}
                 >
                   <View style={styles.explanationHeader}>
                     <Ionicons name="bulb" size={20} color={colors.info} />
