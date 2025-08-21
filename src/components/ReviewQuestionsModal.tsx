@@ -11,13 +11,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
-  FadeInDown,
-  SlideInRight,
-  SlideOutLeft,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  interpolate,
+  withTiming,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -47,7 +44,7 @@ export const ReviewQuestionsModal: React.FC<ReviewQuestionsModalProps> = ({
   const scrollViewRef = useRef<ScrollView>(null);
 
   const progressAnimation = useSharedValue(0);
-  const flipAnimation = useSharedValue(0);
+  const explanationOpacity = useSharedValue(0);
 
   const currentQuestion = questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100;
@@ -59,65 +56,61 @@ export const ReviewQuestionsModal: React.FC<ReviewQuestionsModalProps> = ({
   // Réinitialiser l'animation quand le modal s'ouvre
   useEffect(() => {
     if (visible) {
-      flipAnimation.value = 0;
+      explanationOpacity.value = 0;
       setShowExplanation(false);
       setCurrentIndex(0);
       setReviewedQuestions(new Set());
+      // Forcer le rendu initial correct
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
     }
-  }, [visible, flipAnimation]);
+  }, [visible, explanationOpacity]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < questions.length - 1) {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      flipAnimation.value = 0; // Réinitialiser l'animation de flip
+      explanationOpacity.value = 0; // Réinitialiser l'opacité
       setCurrentIndex(prev => prev + 1);
       setShowExplanation(false);
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     }
-  }, [currentIndex, questions.length, flipAnimation]);
+  }, [currentIndex, questions.length, explanationOpacity]);
 
   const handlePrevious = useCallback(() => {
     if (currentIndex > 0) {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      flipAnimation.value = 0; // Réinitialiser l'animation de flip
+      explanationOpacity.value = 0; // Réinitialiser l'opacité
       setCurrentIndex(prev => prev - 1);
       setShowExplanation(false);
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     }
-  }, [currentIndex, flipAnimation]);
+  }, [currentIndex, explanationOpacity]);
 
   const handleShowExplanation = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowExplanation(true);
-    flipAnimation.value = withSpring(1);
+    explanationOpacity.value = withTiming(1, { duration: 300 });
 
     // Marquer la question comme révisée
     const questionId = currentQuestion.questionId;
     setReviewedQuestions(prev => new Set(prev).add(questionId));
     onQuestionReviewed?.(questionId);
-  }, [currentQuestion, flipAnimation, onQuestionReviewed]);
+  }, [currentQuestion, explanationOpacity, onQuestionReviewed]);
 
   const handleClose = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    flipAnimation.value = 0; // Réinitialiser l'animation avant de fermer
+    explanationOpacity.value = 0; // Réinitialiser l'opacité avant de fermer
     setShowExplanation(false);
     setCurrentIndex(0);
     onClose();
-  }, [onClose, flipAnimation]);
+  }, [onClose, explanationOpacity]);
 
   const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressAnimation.value}%`,
   }));
 
-  const cardStyle = useAnimatedStyle(() => {
-    // Animation plus subtile : juste un petit effet de tilt au lieu d'un flip complet
-    const rotate = interpolate(flipAnimation.value, [0, 1], [0, 10]);
-    const scale = interpolate(flipAnimation.value, [0, 0.5, 1], [1, 0.95, 1]);
+  const explanationStyle = useAnimatedStyle(() => {
     return {
-      transform: [
-        { rotateX: `${rotate}deg` },
-        { scale },
-      ],
+      opacity: explanationOpacity.value,
     };
   });
 
@@ -179,9 +172,7 @@ export const ReviewQuestionsModal: React.FC<ReviewQuestionsModalProps> = ({
             contentContainerStyle={styles.contentContainer}
           >
             <Animated.View
-              entering={SlideInRight.duration(300)}
-              exiting={SlideOutLeft.duration(300)}
-              style={[styles.questionCard, { backgroundColor: colors.surface }, cardStyle]}
+              style={[styles.questionCard, { backgroundColor: colors.surface }]}
             >
               {/* Question Header */}
               <View style={styles.questionHeader}>
@@ -247,8 +238,7 @@ export const ReviewQuestionsModal: React.FC<ReviewQuestionsModalProps> = ({
                 </TouchableOpacity>
               ) : (
                 <Animated.View
-                  entering={FadeInDown.duration(400)}
-                  style={[styles.explanationCard, { backgroundColor: `${colors.info}10` }]}
+                  style={[styles.explanationCard, { backgroundColor: `${colors.info}10` }, explanationStyle]}
                 >
                   <View style={styles.explanationHeader}>
                     <Ionicons name="bulb" size={20} color={colors.info} />
