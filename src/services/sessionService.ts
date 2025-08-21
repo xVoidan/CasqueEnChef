@@ -247,7 +247,7 @@ class SessionService {
               rpcError.message?.includes('function') ||
               rpcError.message?.includes('does not exist')
             ) {
-              console.warn('Fonction bypass non trouvée, insertion normale...');
+              // Insertion normale sans la fonction RPC
               const { error: insertError } = await supabase
                 .from('reponses_utilisateur')
                 .insert(insertData);

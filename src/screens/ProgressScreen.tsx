@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { progressService } from '../services/progressService';
@@ -25,6 +25,7 @@ export const ProgressScreen = () => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [weeklyData, setWeeklyData] = useState<LineChartData>({
     labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
     datasets: [
@@ -50,6 +51,7 @@ export const ProgressScreen = () => {
     }
 
     try {
+      setIsRefreshing(true);
       // Récupérer les performances hebdomadaires
       const weeklyPerformance = await progressService.getWeeklyPerformance(user.id);
 
@@ -96,6 +98,8 @@ export const ProgressScreen = () => {
       }
     } catch (error) {
       console.error('Error fetching progress data:', error);
+    } finally {
+      setIsRefreshing(false);
     }
   }, [user]);
 
@@ -133,10 +137,25 @@ export const ProgressScreen = () => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <Animated.View entering={FadeIn} style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Vos Progrès</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Suivez votre évolution et atteignez vos objectifs
-        </Text>
+        <View style={styles.headerContent}>
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: colors.text }]}>Vos Progrès</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Suivez votre évolution et atteignez vos objectifs
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.refreshButton, { backgroundColor: colors.surface }]}
+            onPress={() => void fetchProgressData()}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={[styles.refreshIcon, { color: colors.primary }]}>↻</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </Animated.View>
 
       <SegmentedControl
@@ -158,6 +177,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 40,
     paddingBottom: 15,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  refreshButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+    elevation: 3,
+  },
+  refreshIcon: {
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 32,
