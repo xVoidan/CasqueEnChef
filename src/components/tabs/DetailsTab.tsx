@@ -14,7 +14,6 @@ interface DetailsTabProps {
 
 export const DetailsTab = memo<DetailsTabProps>(({ stats, colors, onReviewQuestions }) => {
   const [selectedTheme, setSelectedTheme] = useState<number | null>(null);
-  const [expandedQuestions, setExpandedQuestions] = useState(false);
 
   const toggleTheme = useCallback((themeId: number) => {
     setSelectedTheme(prev => (prev === themeId ? null : themeId));
@@ -158,15 +157,6 @@ export const DetailsTab = memo<DetailsTabProps>(({ stats, colors, onReviewQuesti
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Questions à revoir ({stats.failedQuestions.length})
             </Text>
-            <TouchableOpacity
-              onPress={() => setExpandedQuestions(!expandedQuestions)}
-              accessibilityRole="button"
-              accessibilityLabel={expandedQuestions ? 'Voir moins' : 'Voir tout'}
-            >
-              <Text style={[styles.expandButton, { color: colors.primary }]}>
-                {expandedQuestions ? 'Voir moins' : 'Voir tout'}
-              </Text>
-            </TouchableOpacity>
           </View>
 
           <ScrollView 
@@ -175,9 +165,7 @@ export const DetailsTab = memo<DetailsTabProps>(({ stats, colors, onReviewQuesti
             showsVerticalScrollIndicator={true}
           >
             {stats.failedQuestions && stats.failedQuestions.length > 0 ? (
-              stats.failedQuestions
-                .slice(0, expandedQuestions ? undefined : 3)
-                .map((question, index) => (
+              stats.failedQuestions.map((question, index) => (
                 <TouchableOpacity
                   key={question.questionId}
                   style={[styles.failedQuestionItem, { borderBottomColor: colors.border }]}

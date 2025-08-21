@@ -56,23 +56,35 @@ export const ReviewQuestionsModal: React.FC<ReviewQuestionsModalProps> = ({
     progressAnimation.value = withSpring(progress);
   }, [currentIndex, progress, progressAnimation]);
 
+  // Réinitialiser l'animation quand le modal s'ouvre
+  useEffect(() => {
+    if (visible) {
+      flipAnimation.value = 0;
+      setShowExplanation(false);
+      setCurrentIndex(0);
+      setReviewedQuestions(new Set());
+    }
+  }, [visible, flipAnimation]);
+
   const handleNext = useCallback(() => {
     if (currentIndex < questions.length - 1) {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      flipAnimation.value = 0; // Réinitialiser l'animation de flip
       setCurrentIndex(prev => prev + 1);
       setShowExplanation(false);
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     }
-  }, [currentIndex, questions.length]);
+  }, [currentIndex, questions.length, flipAnimation]);
 
   const handlePrevious = useCallback(() => {
     if (currentIndex > 0) {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      flipAnimation.value = 0; // Réinitialiser l'animation de flip
       setCurrentIndex(prev => prev - 1);
       setShowExplanation(false);
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     }
-  }, [currentIndex]);
+  }, [currentIndex, flipAnimation]);
 
   const handleShowExplanation = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -87,17 +99,25 @@ export const ReviewQuestionsModal: React.FC<ReviewQuestionsModalProps> = ({
 
   const handleClose = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    flipAnimation.value = 0; // Réinitialiser l'animation avant de fermer
+    setShowExplanation(false);
+    setCurrentIndex(0);
     onClose();
-  }, [onClose]);
+  }, [onClose, flipAnimation]);
 
   const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressAnimation.value}%`,
   }));
 
   const cardStyle = useAnimatedStyle(() => {
-    const rotate = interpolate(flipAnimation.value, [0, 1], [0, 180]);
+    // Animation plus subtile : juste un petit effet de tilt au lieu d'un flip complet
+    const rotate = interpolate(flipAnimation.value, [0, 1], [0, 10]);
+    const scale = interpolate(flipAnimation.value, [0, 0.5, 1], [1, 0.95, 1]);
     return {
-      transform: [{ rotateY: `${rotate}deg` }],
+      transform: [
+        { rotateX: `${rotate}deg` },
+        { scale },
+      ],
     };
   });
 
